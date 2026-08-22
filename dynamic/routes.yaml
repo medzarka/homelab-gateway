@@ -133,6 +133,39 @@ http:
         certResolver: "cloudflare"
 
     # ----------------------------------------------------
+    # Qdrant Vector Search Engine (VM2: oci01-flex)
+    # ----------------------------------------------------
+    qdrant:
+      rule: "HostRegexp(`^qdrant\\..+$`)"
+      entryPoints: ["websecure"]
+      middlewares: ["app-fail2ban", "security-headers"]
+      service: "qdrant-svc"
+      tls:
+        certResolver: "cloudflare"
+
+    # ----------------------------------------------------
+    # Mem0 Long-Term Memory Engine (VM2: oci01-flex)
+    # ----------------------------------------------------
+    mem0:
+      rule: "HostRegexp(`^mem0\\..+$`)"
+      entryPoints: ["websecure"]
+      middlewares: ["app-fail2ban", "security-headers"]
+      service: "mem0-svc"
+      tls:
+        certResolver: "cloudflare"
+
+    # ----------------------------------------------------
+    # Neo4j Graph Database Browser (VM2: oci01-flex)
+    # ----------------------------------------------------
+    neo4j:
+      rule: "HostRegexp(`^neo4j\\..+$`)"
+      entryPoints: ["websecure"]
+      middlewares: ["app-fail2ban", "security-headers"]
+      service: "neo4j-svc"
+      tls:
+        certResolver: "cloudflare"
+
+    # ----------------------------------------------------
     # Immich Photo Library (VM1: zap-vps)
     # ----------------------------------------------------
     immich:
@@ -192,6 +225,21 @@ http:
       loadBalancer:
         servers:
           - url: "http://worker-oci01:5001"
+
+    qdrant-svc:
+      loadBalancer:
+        servers:
+          - url: "http://worker-oci01:6333"
+
+    mem0-svc:
+      loadBalancer:
+        servers:
+          - url: "http://worker-oci01:8000"
+
+    neo4j-svc:
+      loadBalancer:
+        servers:
+          - url: "http://worker-oci01:7474"
 
     seafile-svc:
       loadBalancer:
