@@ -136,40 +136,34 @@ http:
     # Qdrant Vector Search Engine (VM2: oci01-flex)
     # ----------------------------------------------------
     qdrant:
-      rule: "HostRegexp(`^qdrant\\..+$`)"
+      rule: "Host(`qdrant.bluewave.work`) || HostRegexp(`^qdrant\\..+$`)"
       entryPoints: ["websecure"]
       middlewares: ["app-fail2ban", "security-headers"]
       service: "qdrant-svc"
       tls:
         certResolver: "cloudflare"
-        domains:
-          - main: "qdrant.bluewave.work"
 
     # ----------------------------------------------------
     # Mem0 Long-Term Memory Engine (VM2: oci01-flex)
     # ----------------------------------------------------
     mem0:
-      rule: "HostRegexp(`^mem0\\..+$`)"
+      rule: "Host(`mem0.bluewave.work`) || HostRegexp(`^mem0\\..+$`)"
       entryPoints: ["websecure"]
       middlewares: ["app-fail2ban", "security-headers"]
       service: "mem0-svc"
       tls:
         certResolver: "cloudflare"
-        domains:
-          - main: "mem0.bluewave.work"
 
     # ----------------------------------------------------
     # Neo4j Graph Database Browser (VM2: oci01-flex)
     # ----------------------------------------------------
     neo4j:
-      rule: "HostRegexp(`^neo4j\\..+$`)"
+      rule: "Host(`neo4j.bluewave.work`) || HostRegexp(`^neo4j\\..+$`)"
       entryPoints: ["websecure"]
       middlewares: ["app-fail2ban", "security-headers"]
       service: "neo4j-svc"
       tls:
         certResolver: "cloudflare"
-        domains:
-          - main: "neo4j.bluewave.work"
 
     # ----------------------------------------------------
     # Immich Photo Library (VM1: zap-vps)
