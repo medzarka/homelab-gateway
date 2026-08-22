@@ -142,6 +142,8 @@ http:
       service: "qdrant-svc"
       tls:
         certResolver: "cloudflare"
+        domains:
+          - main: "qdrant.bluewave.work"
 
     # ----------------------------------------------------
     # Mem0 Long-Term Memory Engine (VM2: oci01-flex)
@@ -153,6 +155,8 @@ http:
       service: "mem0-svc"
       tls:
         certResolver: "cloudflare"
+        domains:
+          - main: "mem0.bluewave.work"
 
     # ----------------------------------------------------
     # Neo4j Graph Database Browser (VM2: oci01-flex)
@@ -164,6 +168,8 @@ http:
       service: "neo4j-svc"
       tls:
         certResolver: "cloudflare"
+        domains:
+          - main: "neo4j.bluewave.work"
 
     # ----------------------------------------------------
     # Immich Photo Library (VM1: zap-vps)
