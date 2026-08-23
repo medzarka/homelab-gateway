@@ -47,9 +47,9 @@ session:
   inactivity: "24h"
   remember_me: "1w"
   cookies:
-    - domain: "example.com"
-      authelia_url: "https://auth.example.com"
-      default_redirection_url: "https://homelab.example.com"
+    - domain: "bluewave.work"
+      authelia_url: "https://auth.bluewave.work"
+      default_redirection_url: "https://homelab.bluewave.work"
 
 totp:
   issuer: "Homelab SSO"
