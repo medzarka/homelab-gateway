@@ -47,17 +47,7 @@ services:
           apk add --no-cache openldap-clients >/dev/null 2>&1 || true
           until nc -z lldap 3890 2>/dev/null; do sleep 2; done
           sleep 2
-          cat << LDIF > /tmp/authelia.ldif
-dn: uid=$$AUTH_USER,ou=people,$$DOMAIN_DC
-objectClass: person
-objectClass: organizationalPerson
-objectClass: inetOrgPerson
-uid: $$AUTH_USER
-cn: $$AUTH_USER
-sn: Service
-mail: $$AUTH_USER@$$ROOT_DOM
-userPassword: $$AUTH_PASS
-LDIF
+          printf "dn: uid=%%s,ou=people,%%s\nobjectClass: person\nobjectClass: organizationalPerson\nobjectClass: inetOrgPerson\nuid: %%s\ncn: %%s\nsn: Service\nmail: %%s@%%s\nuserPassword: %%s\n" "$$AUTH_USER" "$$DOMAIN_DC" "$$AUTH_USER" "$$AUTH_USER" "$$AUTH_USER" "$$ROOT_DOM" "$$AUTH_PASS" > /tmp/authelia.ldif
           ldapadd -x -H ldap://lldap:3890 -D "uid=$$ADMIN_USER,ou=people,$$DOMAIN_DC" -w "$$ADMIN_PASS" -f /tmp/authelia.ldif 2>/dev/null || true
           ldappasswd -x -H ldap://lldap:3890 -D "uid=$$ADMIN_USER,ou=people,$$DOMAIN_DC" -w "$$ADMIN_PASS" -s "$$AUTH_PASS" "uid=$$AUTH_USER,ou=people,$$DOMAIN_DC" 2>/dev/null || true
           echo ">>> [Storage Init] LLDAP automated user provisioning complete."
