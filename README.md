@@ -1,6 +1,6 @@
-# 🛡️ Homelab Edge Gateway (Traefik v3 + Authelia SSO + Socket Proxy + Fail2Ban)
+# 🛡️ Homelab Edge Gateway (Traefik v3 + Authelia SSO + LLDAP Directory + Fail2Ban)
 
-Enterprise-grade, automated edge reverse proxy and authentication gateway for the cluster.
+Enterprise-grade, automated edge reverse proxy and centralized identity/user management gateway for the cluster.
 
 ---
 
@@ -28,14 +28,42 @@ Enterprise-grade, automated edge reverse proxy and authentication gateway for th
           │  AUTHELIA SSO (9091)  │                         │    BACKEND ROUTING    │
           │  - Visual Login Page  │                         │  - Homepage (3000)    │
           │  - 2FA TOTP / WebAuthn│                         │  - Dozzle Logs (8080) │
-          │  - Argon2id Passwords │                         │  - Beszel Hub (8090)  │
+          │  - Group & Role ACLs  │                         │  - Beszel Hub (8090)  │
           │  - Session Cookies    │                         │  - Remote Swarm Nodes │
-          └───────────────────────┘                         └───────────────────────┘
+          └───────────┬───────────┘                         └───────────────────────┘
+                      │ (LDAP Protocol)
+                      ▼
+          ┌───────────────────────┐
+          │  LLDAP DIRECTORY (GUI)│
+          │  - Port 17170 (Web UI)│
+          │  - Port 3890 (LDAP)   │
+          │  - SQLite Database    │
+          │  - Users & Group Mgmt │
+          └───────────────────────┘
 ```
 
 ---
 
-## 💾 Standard Data & Storage Template
+## 🌐 Generic Dynamic Domain Interpolation (`ROOT_DOMAIN`)
+
+The gateway is **100% generic and portable**. You do not need to hardcode domain names in configurations.
+
+### ⚙️ How it Works:
+When the stack boots, the **`storage-init`** container automatically generates active runtime configurations from the templates based on your `.env`:
+
+1. **LDAP Base DN (`DOMAIN_DC`) Auto-Computation:**
+   * It dynamically converts any domain to its LDAP DC hierarchy:
+     * `bluewave.work` $\rightarrow$ `dc=bluewave,dc=work`
+     * `myhomelab.io` $\rightarrow$ `dc=myhomelab,dc=io`
+     * `example.com` $\rightarrow$ `dc=example,dc=com`
+2. **Dynamic Configuration Generation:**
+   * Injects the LDAP `base_dn` and session `cookies.domain` into `authelia/configuration.yml`.
+   * Injects the ForwardAuth redirection URL into `dynamic/middleware.yaml`.
+   * Generates Traefik router rules in `dynamic/routes.yaml` for TLS certificates.
+
+---
+
+## 💾 Standard Data & Storage Hierarchy
 
 Persistent state is stored cleanly outside the Git repository in the standard homelab hierarchy:
 
@@ -44,16 +72,18 @@ Persistent state is stored cleanly outside the Git repository in the standard ho
 ├── traefik/
 │   ├── acme.json              # Let's Encrypt Wildcard SSL certificate store (0600)
 │   └── logs/                  # Traefik access & error logs
-└── authelia/
-    ├── db.sqlite3             # Authelia user 2FA and session database
-    └── notification.txt       # Local identity verification codes
+├── authelia/
+│   ├── db.sqlite3             # Authelia 2FA keys, TOTP tokens and session database
+│   └── notification.txt       # Local identity verification codes
+└── lldap/
+    └── users.db               # SQLite database containing all LDAP users, groups & credentials
 ```
 
 ---
 
 ## 🚀 Deployment via Arcane GitOps
 
-1. Open **Arcane Cockpit** at [`https://arcane.example.com`](https://arcane.example.com).
+1. Open **Arcane Cockpit** at `https://arcane.example.com`.
 2. Click **Projects** $\rightarrow$ **New Project**.
 3. Set:
    * **Name:** `gateway`
@@ -63,94 +93,108 @@ Persistent state is stored cleanly outside the Git repository in the standard ho
    ```env
    SYSTEM_USER=mgrsys
    DATA_DIR=/home/mgrsys/DATA
-   CLOUDFLARE_API_TOKEN=your_token_here
+   CLOUDFLARE_API_TOKEN=your_cloudflare_dns_api_token
    ACME_EMAIL=admin@example.com
    ROOT_DOMAIN=example.com
+   SHARED_NETWORK=shared_net
+   LLDAP_JWT_SECRET=generate_with_openssl_rand_hex_32
+   LLDAP_KEY_SEED=generate_with_openssl_rand_hex_32
+   LLDAP_ADMIN_PASSWORD=your_secure_admin_password
+   LLDAP_BASE_DN=dc=example,dc=com
    ```
 5. Click **Deploy**.
 
 ---
 
-## 🔑 Authelia User, Group & Access Control Management
+## 👤 User & Group Management with LLDAP GUI
 
-All credentials are encrypted with **Argon2id** and stored in [`authelia/users_database.yml`](authelia/users_database.yml).
+User and group administration is managed through the built-in **LLDAP Web UI**:
 
-### 1. Adding a New User:
+* 🌐 **Web Interface:** `https://lldap.example.com`
+* 🔑 **Initial Admin Username:** `admin`
+* 🔒 **Initial Admin Password:** Configured in `LLDAP_ADMIN_PASSWORD` (min 8 characters)
 
-#### Step 1: Generate an Argon2id Password Hash
-```bash
-docker run --rm authelia/authelia:latest authelia crypto hash generate argon2 --password 'YourNewPassword'
-```
-
-#### Step 2: Add User to [`authelia/users_database.yml`](authelia/users_database.yml)
-```yaml
-users:
-  admin:
-    displayname: "Homelab Administrator"
-    password: "$argon2id$v=19$m=65536,t=3,p=4$..." # Paste hash here
-    email: "admin@example.com"
-    groups:
-      - admins
-      - devops
-
-  john:
-    displayname: "John Doe"
-    password: "$argon2id$v=19$m=65536,t=3,p=4$..."
-    email: "john@example.com"
-    groups:
-      - users
-      - family
-```
+### 1. Creating Users & Groups in LLDAP:
+1. Log in to `https://lldap.example.com`.
+2. **Create Groups:** Under **Groups**, create user categories:
+   * `admins` — Full cluster and infrastructure access.
+   * `family` — Media, photos, cloud storage, and dashboard.
+   * `work` / `students` — AI development, Open-WebUI, and knowledge tools.
+3. **Create Users:** Under **Users**, create accounts and assign them to their respective groups.
 
 ---
 
-### 2. Restricting Services by User or Group (ACLs)
+## 🔒 Granular Group-Based Access Control (ACLs)
 
-In [`authelia/configuration.yml`](authelia/configuration.yml), you can create granular role-based rules under `access_control.rules`:
+You can restrict access to any subdomain based on LLDAP group membership in [`authelia/configuration.yml`](authelia/configuration.yml) under `access_control.rules`:
 
 ```yaml
 access_control:
   default_policy: "deny"
   rules:
-    # --- Public Bypass (APIs & Static Assets) ---
+    # ----------------------------------------------------
+    # 1. Public Endpoints & APIs (Bypass SSO)
+    # ----------------------------------------------------
     - domain: "auth.example.com"
       policy: "bypass"
 
-    # --- Only 'admins' can access Traefik, Arcane, and Cluster Metrics (2FA) ---
+    - domain:
+        - "photos.example.com"
+        - "mycloud.example.com"
+        - "seafile.example.com"
+      resources:
+        - "^/api/.*$"
+        - "^/api2/.*$"
+        - "^/seafhttp/.*$"
+      policy: "bypass"
+
+    # ----------------------------------------------------
+    # 2. Admins Only (Requires Password + 2FA TOTP)
+    # ----------------------------------------------------
     - domain:
         - "traefik.example.com"
-        - "metrics.example.com"
         - "arcane.example.com"
+        - "lldap.example.com"
+        - "metrics.example.com"
       subject:
         - "group:admins"
       policy: "two_factor"
 
-    # --- Only 'devops' and 'admins' can access container logs ---
-    - domain:
-        - "logs.example.com"
-      subject:
-        - "group:admins"
-        - "group:devops"
-      policy: "one_factor"
-
-    # --- All logged-in users (admins, users, family) can access Homepage ---
+    # ----------------------------------------------------
+    # 3. Family & Admins (Storage, Photos, Dashboard)
+    # ----------------------------------------------------
     - domain:
         - "homelab.example.com"
         - "hub.example.com"
+        - "photos.example.com"
+        - "seafile.example.com"
       subject:
-        - "group:admins"
-        - "group:users"
         - "group:family"
+        - "group:admins"
+      policy: "one_factor"
+
+    # ----------------------------------------------------
+    # 4. Students & Work (AI Tools & Research)
+    # ----------------------------------------------------
+    - domain:
+        - "open-webui.example.com"
+        - "litellm.example.com"
+        - "qdrant.example.com"
+      subject:
+        - "group:students"
+        - "group:work"
+        - "group:admins"
       policy: "one_factor"
 ```
 
-> **⚡ Zero Downtime:** Authelia watches configuration and user database files automatically. Changes take effect **instantly without restarting containers**.
+### 🛡️ What Happens During Access:
+* **Allowed:** If the user is in the permitted group, Authelia allows the request and forwards identity headers (`Remote-User`, `Remote-Groups`, `Remote-Email`) to the upstream application.
+* **Denied:** If the user does not belong to the permitted group, Authelia blocks the request and displays **`HTTP 403 Forbidden` (Access Denied)**.
 
 ---
 
-### 3. Custom Branding & Logo
+## 🎨 Custom Branding & Logo
 
-Custom branding assets reside in `authelia/assets/`:
-* `authelia/assets/logo.png` $\rightarrow$ Custom login card logo.
-* `authelia/assets/favicon.ico` $\rightarrow$ Custom browser tab icon.
-
+Custom login assets reside in `authelia/assets/`:
+* `authelia/assets/logo.png` $\rightarrow$ Login card header logo.
+* `authelia/assets/favicon.ico` $\rightarrow$ Browser tab icon.
