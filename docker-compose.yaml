@@ -109,6 +109,7 @@ services:
       - LLDAP_LDAP_BASE_DN=${LLDAP_BASE_DN:-dc=example,dc=com}
       - LLDAP_LDAP_USER_DN=${LLDAP_ADMIN_USER:-admin}
       - LLDAP_LDAP_USER_PASS=${LLDAP_ADMIN_PASSWORD:-adminpassword}
+      - LLDAP_FORCE_RESET_ADMIN_PASSWORD=true
       - LLDAP_DATABASE_URL=sqlite:///data/users.db?mode=rwc
       - LLDAP_HTTP_URL=https://lldap.${ROOT_DOMAIN:-example.com}
       - LLDAP_LDAP_PORT=3890
