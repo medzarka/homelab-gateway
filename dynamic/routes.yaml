@@ -176,6 +176,17 @@ http:
       tls:
         certResolver: "cloudflare"
 
+    # ----------------------------------------------------
+    # LLDAP - Lightweight LDAP Directory & User Management GUI
+    # ----------------------------------------------------
+    lldap:
+      rule: "Host(`lldap.bluewave.work`) || HostRegexp(`^lldap\\..+$`)"
+      entryPoints: ["websecure"]
+      middlewares: ["app-fail2ban", "security-headers", "compression"]
+      service: "lldap-svc"
+      tls:
+        certResolver: "cloudflare"
+
   services:
     noop:
       loadBalancer:
@@ -250,3 +261,8 @@ http:
       loadBalancer:
         servers:
           - url: "http://immich_server:2283"
+
+    lldap-svc:
+      loadBalancer:
+        servers:
+          - url: "http://lldap:17170"

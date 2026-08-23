@@ -25,10 +25,20 @@ identity_validation:
     jwt_secret: "d990cd84cd49d8264cc6962552f30cc30e9d9388a2f9382bf8bfd61dc458ea06"
 
 authentication_backend:
-  file:
-    path: "/config/users_database.yml"
-    password:
-      algorithm: "argon2"
+  password_reset:
+    disable: false
+  ldap:
+    implementation: "lldap"
+    address: "ldap://lldap:3890"
+    timeout: 5s
+    start_tls: false
+    base_dn: "dc=example.com"
+    additional_users_dn: "ou=people"
+    users_filter: "(&({username_attribute}={input})(objectClass=person))"
+    additional_groups_dn: "ou=groups"
+    groups_filter: "(member={dn})"
+    user: "uid=admin,ou=people,dc=example.com"
+    password: "${AUTHELIA_AUTHENTICATION_BACKEND_LDAP_PASSWORD}"
 
 session:
   name: "authelia_session"

@@ -19,7 +19,7 @@ services:
     command:
       - |
         echo ">>> [Storage Init] Setting up directories and permissions..."
-        mkdir -p /data/traefik/logs /data/authelia
+        mkdir -p /data/traefik/logs /data/authelia /data/lldap
         touch /data/traefik/acme.json /data/traefik/logs/access.log
         chmod -R 775 /data
         chmod 600 /data/traefik/acme.json
@@ -69,6 +69,40 @@ services:
         max-file: "3"
 
   # ========================================================
+  # LLDAP (Lightweight LDAP Directory & User Management GUI)
+  # ========================================================
+  lldap:
+    image: lldap/lldap:stable-alpine
+    container_name: lldap
+    restart: unless-stopped
+    volumes:
+      - ${DATA_DIR:-/home/mgrsys/DATA}/gateway/data/lldap:/data
+    environment:
+      - TZ=${TZ:-UTC}
+      - LLDAP_JWT_SECRET=${LLDAP_JWT_SECRET:-7e6e77fd47866c85542587ea39835c21547309cbaf36c1aeb1dedebf32419040}
+      - LLDAP_KEY_SEED=${LLDAP_KEY_SEED:-9fdbc3c0caa6483cc5f1f354a40068438b44e35ced217c8f0e90697376e49e3d}
+      - LLDAP_LDAP_BASE_DN=${LLDAP_BASE_DN:-dc=bluewave,dc=work}
+      - LLDAP_LDAP_USER_PASS=${LLDAP_ADMIN_PASSWORD:-admin}
+      - LLDAP_DATABASE_URL=sqlite:///data/users.db
+      - LLDAP_HTTP_URL=https://lldap.${ROOT_DOMAIN:-bluewave.work}
+      - LLDAP_LDAP_PORT=3890
+      - LLDAP_HTTP_PORT=17170
+    networks:
+      - shared_net
+      - homelab_swarm_net
+    healthcheck:
+      test: ["CMD", "nc", "-z", "127.0.0.1", "17170"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  # ========================================================
   # AUTHELIA (Centralized SSO & 2FA Authentication Server)
   # ========================================================
   authelia:
@@ -82,9 +116,12 @@ services:
       - ${DATA_DIR:-/home/mgrsys/DATA}/gateway/data/authelia:/config/data
     environment:
       - TZ=${TZ:-UTC}
+      - AUTHELIA_AUTHENTICATION_BACKEND_LDAP_PASSWORD=${LLDAP_ADMIN_PASSWORD:-admin}
     networks:
       - shared_net
       - homelab_swarm_net
+    depends_on:
+      - lldap
     healthcheck:
       test: ["CMD", "wget", "--spider", "-q", "http://127.0.0.1:9091/api/health"]
       interval: 30s
