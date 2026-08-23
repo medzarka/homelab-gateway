@@ -83,7 +83,7 @@ services:
       - LLDAP_KEY_SEED=${LLDAP_KEY_SEED:-9fdbc3c0caa6483cc5f1f354a40068438b44e35ced217c8f0e90697376e49e3d}
       - LLDAP_LDAP_BASE_DN=${LLDAP_BASE_DN:-dc=bluewave,dc=work}
       - LLDAP_LDAP_USER_PASS=${LLDAP_ADMIN_PASSWORD:-admin}
-      - LLDAP_DATABASE_URL=sqlite:///data/users.db
+      - LLDAP_DATABASE_URL=sqlite:///data/users.db?mode=rwc
       - LLDAP_HTTP_URL=https://lldap.${ROOT_DOMAIN:-bluewave.work}
       - LLDAP_LDAP_PORT=3890
       - LLDAP_HTTP_PORT=17170
