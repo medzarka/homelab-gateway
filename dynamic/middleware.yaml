@@ -19,7 +19,7 @@ http:
     # ----------------------------------------------------
     authelia-sso:
       forwardAuth:
-        address: "http://authelia:9091/api/verify?rd=https%3A%2F%2Fauth.bluewave.work%2F"
+        address: "http://authelia:9091/api/verify?rd=https%3A%2F%2Fauth.example.com%2F"
         trustForwardHeader: true
         authResponseHeaders:
           - "Remote-User"

@@ -24,9 +24,14 @@ services:
         chmod -R 775 /data
         chmod 600 /data/traefik/acme.json
 
-        echo ">>> [Storage Init] Interpolating ROOT_DOMAIN ($$ROOT_DOMAIN) from .env into runtime configs..."
-        sed "s|example.com|$$ROOT_DOMAIN|g" /authelia_src/configuration.yml > /tmp/cfg.yml && cp -f /tmp/cfg.yml /authelia_src/configuration.yml
-        sed "s|example.com|$$ROOT_DOMAIN|g" /dynamic_src/middleware.yaml > /tmp/mid.yml && cp -f /tmp/mid.yml /dynamic_src/middleware.yaml
+        ROOT_DOM="$${ROOT_DOMAIN:-example.com}"
+        DOMAIN_DC=$$(echo "$$ROOT_DOM" | sed 's/\./,dc=/g' | sed 's/^/dc=/')
+        echo ">>> [Storage Init] Interpolating ROOT_DOMAIN ($$ROOT_DOM) and DOMAIN_DC ($$DOMAIN_DC) into runtime configs..."
+
+        # Generate active configs from templates
+        sed "s|example.com|$$ROOT_DOM|g" /authelia_src/configuration.yml | sed "s|dc=example,dc=com|$$DOMAIN_DC|g" > /tmp/cfg.yml && cp -f /tmp/cfg.yml /authelia_src/configuration.yml
+        sed "s|example.com|$$ROOT_DOM|g" /dynamic_src/middleware.yaml > /tmp/mid.yml && cp -f /tmp/mid.yml /dynamic_src/middleware.yaml
+        sed "s|example.com|$$ROOT_DOM|g" /dynamic_src/routes.yaml > /tmp/rt.yml && cp -f /tmp/rt.yml /dynamic_src/routes.yaml
 
         echo ">>> [Storage Init] Runtime configs generated. Storage guard active."
         sleep infinity
@@ -81,10 +86,10 @@ services:
       - TZ=${TZ:-UTC}
       - LLDAP_JWT_SECRET=${LLDAP_JWT_SECRET:-7e6e77fd47866c85542587ea39835c21547309cbaf36c1aeb1dedebf32419040}
       - LLDAP_KEY_SEED=${LLDAP_KEY_SEED:-9fdbc3c0caa6483cc5f1f354a40068438b44e35ced217c8f0e90697376e49e3d}
-      - LLDAP_LDAP_BASE_DN=${LLDAP_BASE_DN:-dc=bluewave,dc=work}
+      - LLDAP_LDAP_BASE_DN=${LLDAP_BASE_DN:-dc=example,dc=com}
       - LLDAP_LDAP_USER_PASS=${LLDAP_ADMIN_PASSWORD:-adm1n_password}
       - LLDAP_DATABASE_URL=sqlite:///data/users.db?mode=rwc
-      - LLDAP_HTTP_URL=https://lldap.${ROOT_DOMAIN:-bluewave.work}
+      - LLDAP_HTTP_URL=https://lldap.${ROOT_DOMAIN:-example.com}
       - LLDAP_LDAP_PORT=3890
       - LLDAP_HTTP_PORT=17170
     networks:

@@ -136,7 +136,7 @@ http:
     # Qdrant Vector Search Engine (VM2: oci01-flex)
     # ----------------------------------------------------
     qdrant:
-      rule: "Host(`qdrant.bluewave.work`) || HostRegexp(`^qdrant\\..+$`)"
+      rule: "Host(`qdrant.example.com`) || HostRegexp(`^qdrant\\..+$`)"
       entryPoints: ["websecure"]
       middlewares: ["app-fail2ban", "security-headers"]
       service: "qdrant-svc"
@@ -147,7 +147,7 @@ http:
     # Mem0 Long-Term Memory Engine (VM2: oci01-flex)
     # ----------------------------------------------------
     mem0:
-      rule: "Host(`mem0.bluewave.work`) || HostRegexp(`^mem0\\..+$`)"
+      rule: "Host(`mem0.example.com`) || HostRegexp(`^mem0\\..+$`)"
       entryPoints: ["websecure"]
       middlewares: ["app-fail2ban", "security-headers"]
       service: "mem0-svc"
@@ -158,7 +158,7 @@ http:
     # Neo4j Graph Database Browser (VM2: oci01-flex)
     # ----------------------------------------------------
     neo4j:
-      rule: "Host(`neo4j.bluewave.work`) || HostRegexp(`^neo4j\\..+$`)"
+      rule: "Host(`neo4j.example.com`) || HostRegexp(`^neo4j\\..+$`)"
       entryPoints: ["websecure"]
       middlewares: ["app-fail2ban", "security-headers"]
       service: "neo4j-svc"
@@ -180,7 +180,7 @@ http:
     # LLDAP - Lightweight LDAP Directory & User Management GUI
     # ----------------------------------------------------
     lldap:
-      rule: "Host(`lldap.bluewave.work`) || HostRegexp(`^lldap\\..+$`)"
+      rule: "Host(`lldap.example.com`) || HostRegexp(`^lldap\\..+$`)"
       entryPoints: ["websecure"]
       middlewares: ["app-fail2ban", "security-headers", "compression"]
       service: "lldap-svc"
