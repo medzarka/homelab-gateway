@@ -101,6 +101,8 @@ Persistent state is stored cleanly outside the Git repository in the standard ho
    LLDAP_KEY_SEED=generate_with_openssl_rand_hex_32
    LLDAP_ADMIN_PASSWORD=your_secure_admin_password
    LLDAP_BASE_DN=dc=example,dc=com
+   AUTHELIA_LDAP_USER=authelia
+   AUTHELIA_LDAP_PASSWORD=generate_service_password_here
    ```
 5. Click **Deploy**.
 
@@ -111,16 +113,17 @@ Persistent state is stored cleanly outside the Git repository in the standard ho
 User and group administration is managed through the built-in **LLDAP Web UI**:
 
 * 🌐 **Web Interface:** `https://lldap.example.com`
-* 🔑 **Initial Admin Username:** `admin`
-* 🔒 **Initial Admin Password:** Configured in `LLDAP_ADMIN_PASSWORD` (min 8 characters)
+* 🔑 **Initial Setup Credentials:** Username `authelia` with `AUTHELIA_LDAP_PASSWORD` (or your created admin account).
+* 🛡️ **Permanent Service Isolation:** Authelia uses its dedicated `AUTHELIA_LDAP_USER` account in the background. You can change your personal passwords and create users anytime without breaking Authelia!
 
 ### 1. Creating Users & Groups in LLDAP:
-1. Log in to `https://lldap.example.com`.
-2. **Create Groups:** Under **Groups**, create user categories:
+1. Log in to `https://lldap.example.com` as `authelia` with your service password.
+2. **Create Your Personal Account:** Under **Users**, create your account (e.g. `mgrsys`) and add it to group `lldap_admin` (and your custom groups).
+3. **Create Groups:** Under **Groups**, create user categories:
    * `admins` — Full cluster and infrastructure access.
    * `family` — Media, photos, cloud storage, and dashboard.
    * `work` / `students` — AI development, Open-WebUI, and knowledge tools.
-3. **Create Users:** Under **Users**, create accounts and assign them to their respective groups.
+4. **Create Users:** Under **Users**, create family, students, or team accounts.
 
 ---
 
