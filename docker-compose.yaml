@@ -12,7 +12,8 @@ services:
       - shared_net
     environment:
       - ROOT_DOMAIN=${ROOT_DOMAIN:-example.com}
-      - LLDAP_ADMIN_PASSWORD=${LLDAP_ADMIN_PASSWORD:-adm1n_password}
+      - LLDAP_ADMIN_USER=${LLDAP_ADMIN_USER:-admin}
+      - LLDAP_ADMIN_PASSWORD=${LLDAP_ADMIN_PASSWORD:-adminpassword}
       - AUTHELIA_LDAP_USER=${AUTHELIA_LDAP_USER:-authelia}
       - AUTHELIA_LDAP_PASSWORD=${AUTHELIA_LDAP_PASSWORD:-authelia_service_secret_pass}
     volumes:
@@ -32,12 +33,35 @@ services:
         DOMAIN_DC=$$(echo "$$ROOT_DOM" | sed 's/\./,dc=/g' | sed 's/^/dc=/')
         AUTH_USER="$${AUTHELIA_LDAP_USER:-authelia}"
         AUTH_PASS="$${AUTHELIA_LDAP_PASSWORD:-authelia_service_secret_pass}"
+        ADMIN_USER="$${LLDAP_ADMIN_USER:-admin}"
+        ADMIN_PASS="$${LLDAP_ADMIN_PASSWORD:-adminpassword}"
         echo ">>> [Storage Init] Interpolating ROOT_DOMAIN ($$ROOT_DOM), DOMAIN_DC ($$DOMAIN_DC), AUTH_USER ($$AUTH_USER) into runtime configs..."
 
         # Generate active configs from templates
         sed "s|example.com|$$ROOT_DOM|g" /authelia_src/configuration.yml | sed "s|dc=example,dc=com|$$DOMAIN_DC|g" | sed "s|__AUTHELIA_LDAP_USER__|$$AUTH_USER|g" | sed "s|__AUTHELIA_LDAP_PASSWORD__|$$AUTH_PASS|g" > /tmp/cfg.yml && cp -f /tmp/cfg.yml /authelia_src/configuration.yml
         sed "s|example.com|$$ROOT_DOM|g" /dynamic_src/middleware.yaml > /tmp/mid.yml && cp -f /tmp/mid.yml /dynamic_src/middleware.yaml
         sed "s|example.com|$$ROOT_DOM|g" /dynamic_src/routes.yaml > /tmp/rt.yml && cp -f /tmp/rt.yml /dynamic_src/routes.yaml
+
+        # Automatic background provisioning of authelia service user in LLDAP
+        (
+          apk add --no-cache openldap-clients >/dev/null 2>&1 || true
+          until nc -z lldap 3890 2>/dev/null; do sleep 2; done
+          sleep 2
+          cat << LDIF > /tmp/authelia.ldif
+dn: uid=$$AUTH_USER,ou=people,$$DOMAIN_DC
+objectClass: person
+objectClass: organizationalPerson
+objectClass: inetOrgPerson
+uid: $$AUTH_USER
+cn: $$AUTH_USER
+sn: Service
+mail: $$AUTH_USER@$$ROOT_DOM
+userPassword: $$AUTH_PASS
+LDIF
+          ldapadd -x -H ldap://lldap:3890 -D "uid=$$ADMIN_USER,ou=people,$$DOMAIN_DC" -w "$$ADMIN_PASS" -f /tmp/authelia.ldif 2>/dev/null || true
+          ldappasswd -x -H ldap://lldap:3890 -D "uid=$$ADMIN_USER,ou=people,$$DOMAIN_DC" -w "$$ADMIN_PASS" -s "$$AUTH_PASS" "uid=$$AUTH_USER,ou=people,$$DOMAIN_DC" 2>/dev/null || true
+          echo ">>> [Storage Init] LLDAP automated user provisioning complete."
+        ) &
 
         echo ">>> [Storage Init] Runtime configs generated. Storage guard active."
         sleep infinity
@@ -93,9 +117,8 @@ services:
       - LLDAP_JWT_SECRET=${LLDAP_JWT_SECRET:-7e6e77fd47866c85542587ea39835c21547309cbaf36c1aeb1dedebf32419040}
       - LLDAP_KEY_SEED=${LLDAP_KEY_SEED:-9fdbc3c0caa6483cc5f1f354a40068438b44e35ced217c8f0e90697376e49e3d}
       - LLDAP_LDAP_BASE_DN=${LLDAP_BASE_DN:-dc=example,dc=com}
-      - LLDAP_LDAP_USER_DN=${AUTHELIA_LDAP_USER:-authelia}
-      - LLDAP_LDAP_USER_PASS=${AUTHELIA_LDAP_PASSWORD:-authelia_service_secret_pass}
-      - LLDAP_FORCE_RESET_ADMIN_PASSWORD=true
+      - LLDAP_LDAP_USER_DN=${LLDAP_ADMIN_USER:-admin}
+      - LLDAP_LDAP_USER_PASS=${LLDAP_ADMIN_PASSWORD:-adminpassword}
       - LLDAP_DATABASE_URL=sqlite:///data/users.db?mode=rwc
       - LLDAP_HTTP_URL=https://lldap.${ROOT_DOMAIN:-example.com}
       - LLDAP_LDAP_PORT=3890
