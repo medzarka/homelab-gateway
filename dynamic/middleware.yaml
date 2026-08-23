@@ -33,10 +33,10 @@ http:
     app-fail2ban:
       plugin:
         fail2ban:
-          bantime: "1h"
+          bantime: "5m"
           findtime: "5m"
-          maxretry: 5
-          statuscode: "400-403,404,429"
+          maxretry: 50
+          statuscode: "429,500-504"
           allowlist:
             ips:
               - "100.64.0.0/10"   # Whitelist all Tailscale mesh nodes

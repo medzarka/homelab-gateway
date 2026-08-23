@@ -11,6 +11,7 @@ services:
     network_mode: none
     environment:
       - ROOT_DOMAIN=${ROOT_DOMAIN:-example.com}
+      - LLDAP_ADMIN_PASSWORD=${LLDAP_ADMIN_PASSWORD:-adm1n_password}
     volumes:
       - ${DATA_DIR:-/home/mgrsys/DATA}/gateway/data:/data
       - ./authelia:/authelia_src
@@ -26,10 +27,11 @@ services:
 
         ROOT_DOM="$${ROOT_DOMAIN:-example.com}"
         DOMAIN_DC=$$(echo "$$ROOT_DOM" | sed 's/\./,dc=/g' | sed 's/^/dc=/')
-        echo ">>> [Storage Init] Interpolating ROOT_DOMAIN ($$ROOT_DOM) and DOMAIN_DC ($$DOMAIN_DC) into runtime configs..."
+        ADMIN_PASS="$${LLDAP_ADMIN_PASSWORD:-adm1n_password}"
+        echo ">>> [Storage Init] Interpolating ROOT_DOMAIN ($$ROOT_DOM), DOMAIN_DC ($$DOMAIN_DC) into runtime configs..."
 
         # Generate active configs from templates
-        sed "s|example.com|$$ROOT_DOM|g" /authelia_src/configuration.yml | sed "s|dc=example,dc=com|$$DOMAIN_DC|g" > /tmp/cfg.yml && cp -f /tmp/cfg.yml /authelia_src/configuration.yml
+        sed "s|example.com|$$ROOT_DOM|g" /authelia_src/configuration.yml | sed "s|dc=example,dc=com|$$DOMAIN_DC|g" | sed "s|__LLDAP_ADMIN_PASSWORD__|$$ADMIN_PASS|g" > /tmp/cfg.yml && cp -f /tmp/cfg.yml /authelia_src/configuration.yml
         sed "s|example.com|$$ROOT_DOM|g" /dynamic_src/middleware.yaml > /tmp/mid.yml && cp -f /tmp/mid.yml /dynamic_src/middleware.yaml
         sed "s|example.com|$$ROOT_DOM|g" /dynamic_src/routes.yaml > /tmp/rt.yml && cp -f /tmp/rt.yml /dynamic_src/routes.yaml
 
@@ -194,10 +196,9 @@ services:
       - shared_net
       - socket_proxy
     depends_on:
-      socket-proxy:
-        condition: service_healthy
-      authelia:
-        condition: service_healthy
+      - socket-proxy
+      - authelia
+      - lldap
     logging:
       driver: "json-file"
       options:

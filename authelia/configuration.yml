@@ -38,7 +38,7 @@ authentication_backend:
     additional_groups_dn: "ou=groups"
     groups_filter: "(member={dn})"
     user: "uid=admin,ou=people,dc=example,dc=com"
-    password: "${AUTHELIA_AUTHENTICATION_BACKEND_LDAP_PASSWORD}"
+    password: "__LLDAP_ADMIN_PASSWORD__"
 
 session:
   name: "authelia_session"
