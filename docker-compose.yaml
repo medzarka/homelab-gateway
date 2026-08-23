@@ -12,6 +12,8 @@ services:
     environment:
       - ROOT_DOMAIN=${ROOT_DOMAIN:-example.com}
       - LLDAP_ADMIN_PASSWORD=${LLDAP_ADMIN_PASSWORD:-adm1n_password}
+      - AUTHELIA_LDAP_USER=${AUTHELIA_LDAP_USER:-authelia}
+      - AUTHELIA_LDAP_PASSWORD=${AUTHELIA_LDAP_PASSWORD:-authelia_service_secret_pass}
     volumes:
       - ${DATA_DIR:-/home/mgrsys/DATA}/gateway/data:/data
       - ./authelia:/authelia_src
@@ -27,11 +29,12 @@ services:
 
         ROOT_DOM="$${ROOT_DOMAIN:-example.com}"
         DOMAIN_DC=$$(echo "$$ROOT_DOM" | sed 's/\./,dc=/g' | sed 's/^/dc=/')
-        ADMIN_PASS="$${LLDAP_ADMIN_PASSWORD:-adm1n_password}"
-        echo ">>> [Storage Init] Interpolating ROOT_DOMAIN ($$ROOT_DOM), DOMAIN_DC ($$DOMAIN_DC) into runtime configs..."
+        AUTH_USER="$${AUTHELIA_LDAP_USER:-authelia}"
+        AUTH_PASS="$${AUTHELIA_LDAP_PASSWORD:-authelia_service_secret_pass}"
+        echo ">>> [Storage Init] Interpolating ROOT_DOMAIN ($$ROOT_DOM), DOMAIN_DC ($$DOMAIN_DC), AUTH_USER ($$AUTH_USER) into runtime configs..."
 
         # Generate active configs from templates
-        sed "s|example.com|$$ROOT_DOM|g" /authelia_src/configuration.yml | sed "s|dc=example,dc=com|$$DOMAIN_DC|g" | sed "s|__LLDAP_ADMIN_PASSWORD__|$$ADMIN_PASS|g" > /tmp/cfg.yml && cp -f /tmp/cfg.yml /authelia_src/configuration.yml
+        sed "s|example.com|$$ROOT_DOM|g" /authelia_src/configuration.yml | sed "s|dc=example,dc=com|$$DOMAIN_DC|g" | sed "s|__AUTHELIA_LDAP_USER__|$$AUTH_USER|g" | sed "s|__AUTHELIA_LDAP_PASSWORD__|$$AUTH_PASS|g" > /tmp/cfg.yml && cp -f /tmp/cfg.yml /authelia_src/configuration.yml
         sed "s|example.com|$$ROOT_DOM|g" /dynamic_src/middleware.yaml > /tmp/mid.yml && cp -f /tmp/mid.yml /dynamic_src/middleware.yaml
         sed "s|example.com|$$ROOT_DOM|g" /dynamic_src/routes.yaml > /tmp/rt.yml && cp -f /tmp/rt.yml /dynamic_src/routes.yaml
 
@@ -89,7 +92,9 @@ services:
       - LLDAP_JWT_SECRET=${LLDAP_JWT_SECRET:-7e6e77fd47866c85542587ea39835c21547309cbaf36c1aeb1dedebf32419040}
       - LLDAP_KEY_SEED=${LLDAP_KEY_SEED:-9fdbc3c0caa6483cc5f1f354a40068438b44e35ced217c8f0e90697376e49e3d}
       - LLDAP_LDAP_BASE_DN=${LLDAP_BASE_DN:-dc=example,dc=com}
-      - LLDAP_LDAP_USER_PASS=${LLDAP_ADMIN_PASSWORD:-adm1n_password}
+      - LLDAP_LDAP_USER_DN=${AUTHELIA_LDAP_USER:-authelia}
+      - LLDAP_LDAP_USER_PASS=${AUTHELIA_LDAP_PASSWORD:-authelia_service_secret_pass}
+      - LLDAP_FORCE_RESET_ADMIN_PASSWORD=true
       - LLDAP_DATABASE_URL=sqlite:///data/users.db?mode=rwc
       - LLDAP_HTTP_URL=https://lldap.${ROOT_DOMAIN:-example.com}
       - LLDAP_LDAP_PORT=3890

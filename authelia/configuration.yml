@@ -37,8 +37,8 @@ authentication_backend:
     users_filter: "(&({username_attribute}={input})(objectClass=person))"
     additional_groups_dn: "ou=groups"
     groups_filter: "(member={dn})"
-    user: "uid=admin,ou=people,dc=example,dc=com"
-    password: "__LLDAP_ADMIN_PASSWORD__"
+    user: "uid=__AUTHELIA_LDAP_USER__,ou=people,dc=example,dc=com"
+    password: "__AUTHELIA_LDAP_PASSWORD__"
 
 session:
   name: "authelia_session"
