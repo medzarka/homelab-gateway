@@ -128,7 +128,7 @@ services:
       - ${DATA_DIR:-/home/mgrsys/DATA}/gateway/data/authelia:/config/data
     environment:
       - TZ=${TZ:-UTC}
-      - AUTHELIA_AUTHENTICATION_BACKEND_LDAP_PASSWORD=${LLDAP_ADMIN_PASSWORD:-adm1n_password}
+      - AUTHELIA_AUTHENTICATION_BACKEND_LDAP_PASSWORD=${AUTHELIA_LDAP_PASSWORD:-authelia_service_secret_pass}
     networks:
       - shared_net
       - homelab_swarm_net
