@@ -187,6 +187,17 @@ http:
       tls:
         certResolver: "cloudflare"
 
+    # ----------------------------------------------------
+    # OnlyOffice Document Server (zap-srv compute node)
+    # ----------------------------------------------------
+    onlyoffice:
+      rule: "Host(`onlyoffice-doc-server.bluewave.work`)"
+      entryPoints: ["websecure"]
+      middlewares: ["app-fail2ban", "onlyoffice-headers"]
+      service: "onlyoffice-svc"
+      tls:
+        certResolver: "cloudflare"
+
   services:
     noop:
       loadBalancer:
@@ -266,3 +277,8 @@ http:
       loadBalancer:
         servers:
           - url: "http://lldap:17170"
+
+    onlyoffice-svc:
+      loadBalancer:
+        servers:
+          - url: "http://100.110.173.116:8080"

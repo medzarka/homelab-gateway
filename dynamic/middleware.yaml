@@ -15,6 +15,30 @@ http:
         referrerPolicy: "strict-origin-when-cross-origin"
 
     # ----------------------------------------------------
+    # OnlyOffice Embedding & WebSocket Headers (Allows iFrame in Seafile & Bluewave)
+    # ----------------------------------------------------
+    onlyoffice-headers:
+      headers:
+        browserXssFilter: true
+        contentTypeNosniff: true
+        forceSTSHeader: true
+        stsIncludeSubdomains: true
+        stsPreload: true
+        stsSeconds: 31536000
+        referrerPolicy: "strict-origin-when-cross-origin"
+        # Upstream Headers (sent to OnlyOffice container - Caddy header_up equivalent)
+        customRequestHeaders:
+          X-Forwarded-Proto: "https"
+          X-Forwarded-Host: "onlyoffice-doc-server.bluewave.work"
+          X-Forwarded-Port: "443"
+          X-Forwarded-Ssl: "on"
+        # Downstream Headers (sent to browser - Caddy header_down equivalent)
+        customResponseHeaders:
+          X-Frame-Options: ""
+          Content-Security-Policy: "frame-ancestors 'self' https://*.bluewave.work https://mycloud.bluewave.work http://*.bluewave.work;"
+          Access-Control-Allow-Origin: "*"
+
+    # ----------------------------------------------------
     # Authelia ForwardAuth SSO Middleware
     # ----------------------------------------------------
     authelia-sso:
