@@ -210,24 +210,13 @@ http:
         certResolver: "cloudflare"
 
     # ----------------------------------------------------
-    # Speaches Kokoro TTS & Whisper STT (VM3: zap-srv)
+    # Speaches Kokoro TTS, Whisper STT & Web Console (VM3: zap-srv)
     # ----------------------------------------------------
     speaches:
-      rule: "HostRegexp(`^audio\\..+$`)"
+      rule: "HostRegexp(`^(audio|voice|speaches)\\..+$`)"
       entryPoints: ["websecure"]
       middlewares: ["app-fail2ban", "security-headers"]
       service: "speaches-svc"
-      tls:
-        certResolver: "cloudflare"
-
-    # ----------------------------------------------------
-    # Speaches Realtime Web Console (VM3: zap-srv)
-    # ----------------------------------------------------
-    speaches-console:
-      rule: "HostRegexp(`^(voice|audio-console)\\..+$`)"
-      entryPoints: ["websecure"]
-      middlewares: ["app-fail2ban", "security-headers"]
-      service: "speaches-console-svc"
       tls:
         certResolver: "cloudflare"
 
@@ -436,11 +425,6 @@ http:
       loadBalancer:
         servers:
           - url: "http://100.110.173.116:8086"
-
-    speaches-console-svc:
-      loadBalancer:
-        servers:
-          - url: "http://100.110.173.116:8084"
 
     ollama-svc:
       loadBalancer:
