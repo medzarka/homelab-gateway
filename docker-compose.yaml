@@ -118,11 +118,11 @@ services:
       - shared_net
       - homelab_swarm_net
     healthcheck:
-      test: [ "CMD", "nc", "-z", "127.0.0.1", "17170" ]
+      test: [ "CMD", "/app/lldap", "healthcheck" ]
       interval: 10s
       timeout: 5s
       retries: 5
-      start_period: 5s
+      start_period: 10s
     logging:
       driver: "json-file"
       options:
