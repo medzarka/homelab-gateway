@@ -10,6 +10,7 @@ services:
     restart: unless-stopped
     networks:
       - shared_net
+      - homelab_swarm_net
     environment:
       - ROOT_DOMAIN=${ROOT_DOMAIN:-example.com}
       - LLDAP_ADMIN_USER=${LLDAP_ADMIN_USER:-admin}
@@ -17,7 +18,7 @@ services:
       - AUTHELIA_LDAP_USER=${AUTHELIA_LDAP_USER:-authelia}
       - AUTHELIA_LDAP_PASSWORD=${AUTHELIA_LDAP_PASSWORD:-authelia_service_secret_pass}
     volumes:
-      - ${DATA_DIR:-/home/mgrsys/DATA}/gateway/data:/data
+      - ${DATA_DIR:-/home/${SYSTEM_USER:-homelab}/DATA}/gateway/data:/data
       - ./authelia:/authelia_src
       - ./dynamic:/dynamic_src
     entrypoint: ["/bin/sh", "-c"]
@@ -101,7 +102,7 @@ services:
     container_name: lldap
     restart: unless-stopped
     volumes:
-      - ${DATA_DIR:-/home/mgrsys/DATA}/gateway/data/lldap:/data
+      - ${DATA_DIR:-/home/${SYSTEM_USER:-homelab}/DATA}/gateway/data/lldap:/data
     environment:
       - TZ=${TZ:-UTC}
       - LLDAP_JWT_SECRET=${LLDAP_JWT_SECRET:-7e6e77fd47866c85542587ea39835c21547309cbaf36c1aeb1dedebf32419040}
@@ -140,7 +141,7 @@ services:
       - ./authelia/configuration.yml:/config/configuration.yml:ro
       - ./authelia/users_database.yml:/config/users_database.yml:ro
       - ./authelia/assets:/config/assets:ro
-      - ${DATA_DIR:-/home/mgrsys/DATA}/gateway/data/authelia:/config/data
+      - ${DATA_DIR:-/home/${SYSTEM_USER:-homelab}/DATA}/gateway/data/authelia:/config/data
     environment:
       - TZ=${TZ:-UTC}
       - AUTHELIA_AUTHENTICATION_BACKEND_LDAP_PASSWORD=${AUTHELIA_LDAP_PASSWORD:-authelia_service_secret_pass}
@@ -181,13 +182,11 @@ services:
       - ACME_EMAIL=${ACME_EMAIL}
       - DOCKER_API_VERSION=1.45
     volumes:
-      - ${DATA_DIR:-/home/mgrsys/DATA}/gateway/data/traefik/acme.json:/etc/traefik/acme.json
-      - ${DATA_DIR:-/home/mgrsys/DATA}/gateway/data/traefik/logs:/var/log/traefik
+      - ${DATA_DIR:-/home/${SYSTEM_USER:-homelab}/DATA}/gateway/data/traefik/acme.json:/etc/traefik/acme.json
+      - ${DATA_DIR:-/home/${SYSTEM_USER:-homelab}/DATA}/gateway/data/traefik/logs:/var/log/traefik
       - ./dynamic:/etc/traefik/dynamic:ro
     extra_hosts:
       - "host.docker.internal:host-gateway"
-      - "worker-oci01:${TS_VM2_OCI01:-127.0.0.1}"
-      - "worker-orangepi:${TS_VM3_ORANGEPI:-127.0.0.1}"
     command:
       - "--global.checknewversion=false"
       - "--global.sendanonymoususage=false"
@@ -227,7 +226,7 @@ services:
 
 networks:
   homelab_swarm_net:
-    name: homelab_swarm_net
+    name: ${SWARM_NETWORK:-homelab_swarm_net}
     external: true
   shared_net:
     name: ${SHARED_NETWORK:-shared_net}

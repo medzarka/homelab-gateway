@@ -364,82 +364,82 @@ http:
     arcane-svc:
       loadBalancer:
         servers:
-          - url: "http://host.docker.internal:3552"
+          - url: "http://arcane:3552"
 
     litellm-svc:
       loadBalancer:
         servers:
-          - url: "http://worker-oci01:4000"
+          - url: "http://litellm:4000"
 
     openwebui-svc:
       loadBalancer:
         servers:
-          - url: "http://worker-oci01:3030"
+          - url: "http://open-webui:8080"
 
     litellmhelper-svc:
       loadBalancer:
         servers:
-          - url: "http://worker-oci01:5001"
+          - url: "http://litellm-helper:5001"
 
     hermes-svc:
       loadBalancer:
         servers:
-          - url: "http://worker-oci01:9119"
+          - url: "http://hermes-agent:9119"
 
     knowledge-mcp-svc:
       loadBalancer:
         servers:
-          - url: "http://worker-oci01:8095"
+          - url: "http://knowledge-mcp:8095"
 
     sandbox-svc:
       loadBalancer:
         servers:
-          - url: "http://100.64.0.3:8088"
+          - url: "http://compute_agent_sandbox:8088"
 
     qdrant-svc:
       loadBalancer:
         servers:
-          - url: "http://worker-oci01:6333"
+          - url: "http://qdrant:6333"
 
     mem0-svc:
       loadBalancer:
         servers:
-          - url: "http://worker-oci01:8000"
+          - url: "http://mem0-api:8000"
 
     neo4j-svc:
       loadBalancer:
         servers:
-          - url: "http://worker-oci01:7474"
+          - url: "http://neo4j:7474"
 
     searxng-svc:
       loadBalancer:
         servers:
-          - url: "http://100.64.0.3:8085"
+          - url: "http://compute_searxng:8080"
 
     firecrawl-svc:
       loadBalancer:
         servers:
-          - url: "http://100.64.0.3:3038"
+          - url: "http://compute_firecrawl_api:3036"
 
     speaches-svc:
       loadBalancer:
         servers:
-          - url: "http://100.64.0.3:8086"
+          - url: "http://compute_speaches:8000"
 
     ollama-svc:
       loadBalancer:
         servers:
-          - url: "http://100.64.0.3:11434"
+          - url: "http://compute_ollama:11434"
 
     jupyter-svc:
       loadBalancer:
         servers:
-          - url: "http://worker-oci01:8888"
+          - url: "http://jupyter:8888"
 
     codeserver-svc:
       loadBalancer:
         servers:
-          - url: "http://worker-oci01:8443"
+          - url: "http://code-server:8443"
 
     seafile-svc:
       loadBalancer:
@@ -459,19 +459,19 @@ http:
     onlyoffice-svc:
       loadBalancer:
         servers:
-          - url: "http://100.64.0.3:8080"
+          - url: "http://compute_onlyoffice:80"
 
     jellyfin-svc:
       loadBalancer:
         servers:
-          - url: "http://worker-oci01:8096"
+          - url: "http://jellyfin:8096"
 
     navidrome-svc:
       loadBalancer:
         servers:
-          - url: "http://worker-oci01:4533"
+          - url: "http://navidrome:4533"
 
     qbittorrent-svc:
       loadBalancer:
         servers:
-          - url: "http://worker-oci01:8081"
+          - url: "http://qbittorrent:8081"
