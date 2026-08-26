@@ -1,3 +1,15 @@
+> ### 🌐 [Homelab Sovereign Cluster Architecture](https://github.com/medzarka/homelab-nodes)
+> This repository is a modular component of the **Homelab Sovereign Multi-Node Cluster** — an enterprise-grade, privacy-first, self-hosted infrastructure spanning cloud VPS, on-premise compute servers, and edge ARM nodes.
+> 
+> * **Zero-Trust Network**: Multi-host WireGuard mesh interconnect via **Tailscale** with strict **Firewalld** zoning (`iptables: false`).
+> * **Unified Identity & Ingress**: Centralized reverse proxy via **Traefik v3**, **Authelia SSO (2FA)**, and **LLDAP Directory**.
+> * **Cluster Orchestration & GitOps**: High-availability **Docker Swarm** managed declaratively via **Arcane Cockpit**.
+> * **End-to-End Observability**: Centralized portal (**Homepage**), metrics (**Beszel**), real-time logs (**Dozzle**), and uptime monitoring (**Uptime Kuma**).
+> * **Sovereign Local AI & Compute**: Distributed inference (**LiteLLM**, **Ollama**, **Qdrant**, **Mem0**, **Hermes Agents**).
+> * **Private Cloud & Storage**: Encrypted data synchronization, automated backups, and multi-cloud mirrors.
+
+---
+
 # 🛡️ Homelab Edge Gateway (Traefik v3 + Authelia SSO + LLDAP Directory + Fail2Ban)
 
 Enterprise-grade, automated edge reverse proxy and centralized identity/user management gateway for the cluster.
@@ -13,7 +25,7 @@ Enterprise-grade, automated edge reverse proxy and centralized identity/user man
                                                │
                                                ▼
                               ┌──────────────────────────────────┐
-                              │       TRAEFIK V3.1 (zap-vps)     │
+                              │    TRAEFIK V3.1 (Master Node)    │
                               │  - Wildcard TLS (Cloudflare DNS) │
                               │  - Automated Port 80 -> 443      │
                               │  - Fail2Ban Brute-Force Defense  │
@@ -53,7 +65,6 @@ When the stack boots, the **`storage-init`** container automatically generates a
 
 1. **LDAP Base DN (`DOMAIN_DC`) Auto-Computation:**
    * It dynamically converts any domain to its LDAP DC hierarchy:
-     * `bluewave.work` $\rightarrow$ `dc=bluewave,dc=work`
      * `myhomelab.io` $\rightarrow$ `dc=myhomelab,dc=io`
      * `example.com` $\rightarrow$ `dc=example,dc=com`
 2. **Dynamic Configuration Generation:**
@@ -87,12 +98,12 @@ Persistent state is stored cleanly outside the Git repository in the standard ho
 2. Click **Projects** $\rightarrow$ **New Project**.
 3. Set:
    * **Name:** `gateway`
-   * **Git Repository:** `https://github.com/medzarka/home-lab-gateway.git`
+   * **Git Repository:** `https://github.com/medzarka/homelab-gateway.git`
    * **Branch:** `main`
 4. Add Environment Variables (from `.env.example`):
    ```env
-   SYSTEM_USER=mgrsys
-   DATA_DIR=/home/mgrsys/DATA
+   SYSTEM_USER=homelab
+   DATA_DIR=/home/homelab/DATA
    CLOUDFLARE_API_TOKEN=your_cloudflare_dns_api_token
    ACME_EMAIL=admin@example.com
    ROOT_DOMAIN=example.com

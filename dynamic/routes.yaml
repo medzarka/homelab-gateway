@@ -265,10 +265,10 @@ http:
         certResolver: "cloudflare"
 
     # ----------------------------------------------------
-    # OnlyOffice Document Server (VM3: zap-srv compute node)
+    # OnlyOffice Document Server (VM3: Compute Node)
     # ----------------------------------------------------
     onlyoffice:
-      rule: "Host(`onlyoffice-doc-server.bluewave.work`)"
+      rule: "HostRegexp(`^onlyoffice\\..+$`)"
       entryPoints: ["websecure"]
       middlewares: ["app-fail2ban", "onlyoffice-headers"]
       service: "onlyoffice-svc"
@@ -394,7 +394,7 @@ http:
     sandbox-svc:
       loadBalancer:
         servers:
-          - url: "http://100.110.173.116:8088"
+          - url: "http://100.64.0.3:8088"
 
     qdrant-svc:
       loadBalancer:
@@ -414,22 +414,22 @@ http:
     searxng-svc:
       loadBalancer:
         servers:
-          - url: "http://100.110.173.116:8085"
+          - url: "http://100.64.0.3:8085"
 
     firecrawl-svc:
       loadBalancer:
         servers:
-          - url: "http://100.110.173.116:3038"
+          - url: "http://100.64.0.3:3038"
 
     speaches-svc:
       loadBalancer:
         servers:
-          - url: "http://100.110.173.116:8086"
+          - url: "http://100.64.0.3:8086"
 
     ollama-svc:
       loadBalancer:
         servers:
-          - url: "http://100.110.173.116:11434"
+          - url: "http://100.64.0.3:11434"
 
     jupyter-svc:
       loadBalancer:
@@ -459,7 +459,7 @@ http:
     onlyoffice-svc:
       loadBalancer:
         servers:
-          - url: "http://100.110.173.116:8080"
+          - url: "http://100.64.0.3:8080"
 
     jellyfin-svc:
       loadBalancer:
