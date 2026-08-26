@@ -21,7 +21,7 @@ services:
       - ${DATA_DIR:-/home/${SYSTEM_USER:-homelab}/DATA}/gateway/data:/data
       - ./authelia:/authelia_src
       - ./dynamic:/dynamic_src
-    entrypoint: ["/bin/sh", "-c"]
+    entrypoint: [ "/bin/sh", "-c" ]
     command:
       - |
         echo ">>> [Storage Init] Setting up directories and permissions..."
@@ -83,7 +83,7 @@ services:
     security_opt:
       - no-new-privileges:true
     healthcheck:
-      test: ["CMD", "wget", "--spider", "-q", "http://127.0.0.1:2375/_ping"]
+      test: [ "CMD", "wget", "--spider", "-q", "http://127.0.0.1:2375/_ping" ]
       interval: 30s
       timeout: 5s
       retries: 3
@@ -110,7 +110,8 @@ services:
       - LLDAP_LDAP_BASE_DN=${LLDAP_BASE_DN:-dc=example,dc=com}
       - LLDAP_LDAP_USER_DN=${LLDAP_ADMIN_USER:-admin}
       - LLDAP_LDAP_USER_PASS=${LLDAP_ADMIN_PASSWORD:-adminpassword}
-      - LLDAP_FORCE_RESET_ADMIN_PASSWORD=true
+      - LLDAP_FORCE_UPDATE_PRIVATE_KEY=true
+      - LLDAP_FORCE_LDAP_USER_PASS_RESET=true
       - LLDAP_DATABASE_URL=sqlite:///data/users.db?mode=rwc
       - LLDAP_HTTP_URL=https://lldap.${ROOT_DOMAIN:-example.com}
       - LLDAP_LDAP_PORT=3890
@@ -119,11 +120,11 @@ services:
       - shared_net
       - homelab_swarm_net
     healthcheck:
-      test: ["CMD", "nc", "-z", "127.0.0.1", "17170"]
-      interval: 30s
+      test: [ "CMD", "nc", "-z", "127.0.0.1", "17170" ]
+      interval: 10s
       timeout: 5s
-      retries: 3
-      start_period: 10s
+      retries: 5
+      start_period: 5s
     logging:
       driver: "json-file"
       options:
@@ -138,9 +139,9 @@ services:
     container_name: authelia
     restart: unless-stopped
     volumes:
-      - ./authelia/configuration.yml:/config/configuration.yml:ro
-      - ./authelia/users_database.yml:/config/users_database.yml:ro
-      - ./authelia/assets:/config/assets:ro
+      - ./authelia/configuration.yml:/config/configuration.yml
+      - ./authelia/users_database.yml:/config/users_database.yml
+      - ./authelia/assets:/config/assets
       - ${DATA_DIR:-/home/${SYSTEM_USER:-homelab}/DATA}/gateway/data/authelia:/config/data
     environment:
       - TZ=${TZ:-UTC}
@@ -149,9 +150,10 @@ services:
       - shared_net
       - homelab_swarm_net
     depends_on:
-      - lldap
+      lldap:
+        condition: service_healthy
     healthcheck:
-      test: ["CMD", "wget", "--spider", "-q", "http://127.0.0.1:9091/api/health"]
+      test: [ "CMD", "wget", "--spider", "-q", "http://127.0.0.1:9091/api/health" ]
       interval: 30s
       timeout: 5s
       retries: 3
