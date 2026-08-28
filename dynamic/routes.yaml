@@ -268,7 +268,7 @@ http:
     # OnlyOffice Document Server (VM3: Compute Node)
     # ----------------------------------------------------
     onlyoffice:
-      rule: "HostRegexp(`^onlyoffice\\..+$`)"
+      rule: "HostRegexp(`^(onlyoffice|onlyoffice-doc-server|onlyoffice-documentserver|office|docs)\\..+$`)"
       entryPoints: ["websecure"]
       middlewares: ["app-fail2ban", "onlyoffice-headers"]
       service: "onlyoffice-svc"
