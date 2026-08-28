@@ -55,7 +55,15 @@ services:
         ) &
 
         echo ">>> [Storage Init] Runtime configs generated. Storage guard active."
+        touch /data/init_done
         sleep infinity
+
+    healthcheck:
+      test: [ "CMD", "test", "-f", "/data/init_done" ]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 5s
 
   # ========================================================
   # DOCKER SOCKET PROXY (Read-Only Secure Socket Isolation)
@@ -154,6 +162,8 @@ services:
     depends_on:
       lldap:
         condition: service_healthy
+      storage-init:
+        condition: service_healthy
     healthcheck:
       test: [ "CMD", "wget", "--spider", "-q", "http://127.0.0.1:9091/api/health" ]
       interval: 30s
@@ -219,9 +229,14 @@ services:
       - shared_net
       - socket_proxy
     depends_on:
-      - socket-proxy
-      - authelia
-      - lldap
+      socket-proxy:
+        condition: service_started
+      authelia:
+        condition: service_healthy
+      lldap:
+        condition: service_healthy
+      storage-init:
+        condition: service_healthy
     logging:
       driver: "json-file"
       options:
