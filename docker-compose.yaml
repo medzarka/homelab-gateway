@@ -39,9 +39,9 @@ services:
         echo ">>> [Storage Init] Interpolating ROOT_DOMAIN ($$ROOT_DOM), DOMAIN_DC ($$DOMAIN_DC), AUTH_USER ($$AUTH_USER) into runtime configs..."
 
         # Generate active configs from templates
-        sed "s|example.com|$$ROOT_DOM|g" /authelia_src/configuration.yml | sed "s|dc=example,dc=com|$$DOMAIN_DC|g" | sed "s|__AUTHELIA_LDAP_USER__|$$AUTH_USER|g" | sed "s|__AUTHELIA_LDAP_PASSWORD__|$$AUTH_PASS|g" > /tmp/cfg.yml && cp -f /tmp/cfg.yml /authelia_src/configuration.yml
-        sed "s|example.com|$$ROOT_DOM|g" /dynamic_src/middleware.yaml > /tmp/mid.yml && cp -f /tmp/mid.yml /dynamic_src/middleware.yaml
-        sed "s|example.com|$$ROOT_DOM|g" /dynamic_src/routes.yaml > /tmp/rt.yml && cp -f /tmp/rt.yml /dynamic_src/routes.yaml
+        sed "s|example.com|$$ROOT_DOM|g" /authelia_src/configuration.yml | sed "s|dc=example,dc=com|$$DOMAIN_DC|g" | sed "s|__AUTHELIA_LDAP_USER__|$$AUTH_USER|g" | sed "s|__AUTHELIA_LDAP_PASSWORD__|$$AUTH_PASS|g" > /tmp/cfg.yml && cat /tmp/cfg.yml > /authelia_src/configuration.yml
+        sed "s|example.com|$$ROOT_DOM|g" /dynamic_src/middleware.yaml > /tmp/mid.yml && cat /tmp/mid.yml > /dynamic_src/middleware.yaml
+        sed "s|example.com|$$ROOT_DOM|g" /dynamic_src/routes.yaml > /tmp/rt.yml && cat /tmp/rt.yml > /dynamic_src/routes.yaml
 
         # Automatic background provisioning of authelia service user in LLDAP
         (
