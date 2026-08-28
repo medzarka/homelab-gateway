@@ -157,8 +157,7 @@ services:
       - AUTHELIA_NOTIFIER_SMTP_USERNAME=${SMTP_USERNAME}
       - AUTHELIA_NOTIFIER_SMTP_PASSWORD=${SMTP_PASSWORD}
       - AUTHELIA_NOTIFIER_SMTP_SENDER=${SMTP_SENDER:-Authelia <authelia@${ROOT_DOMAIN:-example.com}>}
-    command:
-      - "--config=/config/data/configuration.yml"
+      - X_AUTHELIA_CONFIG=/config/data/configuration.yml
     networks:
       - shared_net
       - homelab_swarm_net
