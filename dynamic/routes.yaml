@@ -4,7 +4,7 @@ http:
     # Authelia - Centralized SSO Authentication Portal
     # ----------------------------------------------------
     authelia:
-      rule: "HostRegexp(`auth\\..*`)"
+      rule: "Host(`auth.example.com`, `authelia.example.com`)"
       entryPoints: ["websecure"]
       middlewares: ["app-fail2ban", "security-headers", "compression"]
       service: "authelia-svc"
@@ -15,7 +15,7 @@ http:
     # Homepage - Unified Homelab Portal & Service Cockpit (SSO Protected)
     # ----------------------------------------------------
     homepage:
-      rule: "HostRegexp(`^(homelab|hub)\\..+$`)"
+      rule: "Host(`homelab.example.com`, `hub.example.com`)"
       entryPoints: ["websecure"]
       middlewares: ["authelia-sso", "app-fail2ban", "security-headers", "compression"]
       service: "homepage-svc"
@@ -26,7 +26,7 @@ http:
     # Beszel - Cluster Telemetry & Bandwidth Metrics (SSO 2FA Protected)
     # ----------------------------------------------------
     beszel:
-      rule: "HostRegexp(`^(metrics|beszel)\\..+$`)"
+      rule: "Host(`metrics.example.com`, `beszel.example.com`)"
       entryPoints: ["websecure"]
       middlewares: ["authelia-sso", "app-fail2ban", "security-headers", "compression"]
       service: "beszel-svc"
@@ -37,7 +37,7 @@ http:
     # Dozzle - Centralized Multi-Node Container Log Viewer (SSO Protected)
     # ----------------------------------------------------
     dozzle:
-      rule: "HostRegexp(`^logs\\..+$`)"
+      rule: "Host(`logs.example.com`, `dozzle.example.com`)"
       entryPoints: ["websecure"]
       middlewares: ["authelia-sso", "app-fail2ban", "security-headers"]
       service: "dozzle-svc"
@@ -48,7 +48,7 @@ http:
     # Uptime Kuma - Multi-Node Status & Health Alerts
     # ----------------------------------------------------
     uptime-kuma:
-      rule: "HostRegexp(`^status\\..+$`)"
+      rule: "Host(`status.example.com`, `uptimekuma.example.com`)"
       entryPoints: ["websecure"]
       middlewares: ["app-fail2ban", "security-headers", "compression"]
       service: "uptimekuma-svc"
@@ -59,7 +59,7 @@ http:
     # Traefik Web Dashboard & Visual Monitoring GUI (SSO 2FA Protected)
     # ----------------------------------------------------
     traefik-dashboard:
-      rule: "HostRegexp(`^traefik\\..+$`)"
+      rule: "Host(`traefik.example.com`)"
       entryPoints: ["websecure"]
       middlewares: ["authelia-sso", "app-fail2ban", "security-headers", "compression"]
       service: "api@internal"
@@ -70,7 +70,7 @@ http:
     # Shortcut: /arcane -> Dedicated Arcane Domain
     # ----------------------------------------------------
     arcane-redirect:
-      rule: "HostRegexp(`^(homelab|hub)\\..+$`) && (Path(`/arcane`) || PathPrefix(`/arcane/`))"
+      rule: "Host(`homelab.example.com`, `hub.example.com`) && (Path(`/arcane`) || PathPrefix(`/arcane/`))"
       entryPoints: ["websecure"]
       middlewares: ["to-arcane-domain"]
       service: "noop@internal"
@@ -81,7 +81,7 @@ http:
     # Arcane Docker Management Cockpit (VM1: zap-vps)
     # ----------------------------------------------------
     arcane:
-      rule: "HostRegexp(`^arcane\\..+$`)"
+      rule: "Host(`arcane.example.com`)"
       entryPoints: ["websecure"]
       middlewares: ["app-fail2ban", "security-headers", "compression"]
       service: "arcane-svc"
@@ -92,7 +92,7 @@ http:
     # LiteLLM AI Gateway (VM2: oci01-flex)
     # ----------------------------------------------------
     litellm:
-      rule: "HostRegexp(`^litellm\\..+$`)"
+      rule: "Host(`litellm.example.com`)"
       entryPoints: ["websecure"]
       middlewares: ["app-fail2ban", "security-headers"]
       service: "litellm-svc"
@@ -103,7 +103,7 @@ http:
     # Open-WebUI (VM2: oci01-flex)
     # ----------------------------------------------------
     open-webui:
-      rule: "HostRegexp(`^open-webui\\..+$`)"
+      rule: "Host(`open-webui.example.com`, `chat.example.com`)"
       entryPoints: ["websecure"]
       middlewares: ["app-fail2ban", "security-headers", "compression"]
       service: "openwebui-svc"
@@ -114,7 +114,7 @@ http:
     # LiteLLM Helper (VM2: oci01-flex)
     # ----------------------------------------------------
     litellm-helper:
-      rule: "HostRegexp(`^litellm-helper\\..+$`)"
+      rule: "Host(`litellm-helper.example.com`)"
       entryPoints: ["websecure"]
       middlewares: ["app-fail2ban", "security-headers"]
       service: "litellmhelper-svc"
@@ -125,7 +125,7 @@ http:
     # Hermes Agent Dashboard & Gateway (VM2: oci01-flex)
     # ----------------------------------------------------
     hermes:
-      rule: "HostRegexp(`^hermes\\..+$`)"
+      rule: "Host(`hermes.example.com`, `agents.example.com`)"
       entryPoints: ["websecure"]
       middlewares: ["authelia-sso", "app-fail2ban", "security-headers"]
       service: "hermes-svc"
@@ -136,7 +136,7 @@ http:
     # Homelab AI Knowledge Hub MCP Server (VM2: oci01-flex)
     # ----------------------------------------------------
     knowledge-mcp:
-      rule: "HostRegexp(`^knowledge-mcp\\..+$`)"
+      rule: "Host(`knowledge-mcp.example.com`, `knowledge.example.com`)"
       entryPoints: ["websecure"]
       middlewares: ["app-fail2ban", "security-headers"]
       service: "knowledge-mcp-svc"
@@ -147,7 +147,7 @@ http:
     # Homelab Agent Execution Sandbox MCP (VM3: zap-srv)
     # ----------------------------------------------------
     sandbox:
-      rule: "HostRegexp(`^sandbox\\..+$`)"
+      rule: "Host(`sandbox.example.com`)"
       entryPoints: ["websecure"]
       middlewares: ["app-fail2ban", "security-headers"]
       service: "sandbox-svc"
@@ -158,7 +158,7 @@ http:
     # Qdrant Vector Search Engine (VM2: oci01-flex)
     # ----------------------------------------------------
     qdrant:
-      rule: "HostRegexp(`^qdrant\\..+$`)"
+      rule: "Host(`qdrant.example.com`)"
       entryPoints: ["websecure"]
       middlewares: ["app-fail2ban", "security-headers"]
       service: "qdrant-svc"
@@ -169,7 +169,7 @@ http:
     # Mem0 Long-Term Memory Engine (VM2: oci01-flex)
     # ----------------------------------------------------
     mem0:
-      rule: "HostRegexp(`^mem0\\..+$`)"
+      rule: "Host(`mem0.example.com`)"
       entryPoints: ["websecure"]
       middlewares: ["app-fail2ban", "security-headers"]
       service: "mem0-svc"
@@ -180,7 +180,7 @@ http:
     # Neo4j Graph Database Browser (VM2: oci01-flex)
     # ----------------------------------------------------
     neo4j:
-      rule: "HostRegexp(`^neo4j\\..+$`)"
+      rule: "Host(`neo4j.example.com`)"
       entryPoints: ["websecure"]
       middlewares: ["app-fail2ban", "security-headers"]
       service: "neo4j-svc"
@@ -191,7 +191,7 @@ http:
     # SearXNG Private Metasearch Engine (VM3: zap-srv)
     # ----------------------------------------------------
     searxng:
-      rule: "HostRegexp(`^search\\..+$`)"
+      rule: "Host(`search.example.com`, `searxng.example.com`)"
       entryPoints: ["websecure"]
       middlewares: ["app-fail2ban", "security-headers"]
       service: "searxng-svc"
@@ -202,7 +202,7 @@ http:
     # Firecrawl LLM Web Scraper & Crawler (VM3: zap-srv)
     # ----------------------------------------------------
     firecrawl:
-      rule: "HostRegexp(`^scraper\\..+$`)"
+      rule: "Host(`scraper.example.com`, `firecrawl.example.com`)"
       entryPoints: ["websecure"]
       middlewares: ["app-fail2ban", "security-headers"]
       service: "firecrawl-svc"
@@ -213,7 +213,7 @@ http:
     # Speaches Kokoro TTS, Whisper STT & Web Console (VM3: zap-srv)
     # ----------------------------------------------------
     speaches:
-      rule: "HostRegexp(`^(audio|voice|speaches)\\..+$`)"
+      rule: "Host(`audio.example.com`, `voice.example.com`, `speaches.example.com`)"
       entryPoints: ["websecure"]
       middlewares: ["app-fail2ban", "security-headers"]
       service: "speaches-svc"
@@ -224,7 +224,7 @@ http:
     # Ollama Local AI & Vision Engine (VM3: zap-srv)
     # ----------------------------------------------------
     ollama:
-      rule: "HostRegexp(`^ollama\\..+$`)"
+      rule: "Host(`ollama.example.com`)"
       entryPoints: ["websecure"]
       middlewares: ["app-fail2ban", "security-headers"]
       service: "ollama-svc"
@@ -235,7 +235,7 @@ http:
     # JupyterLab Data Science IDE (VM2: oci01-flex)
     # ----------------------------------------------------
     jupyter:
-      rule: "HostRegexp(`^jupyter\\..+$`)"
+      rule: "Host(`jupyter.example.com`)"
       entryPoints: ["websecure"]
       middlewares: ["authelia-sso", "app-fail2ban", "security-headers"]
       service: "jupyter-svc"
@@ -246,7 +246,7 @@ http:
     # VS Code Code-Server (VM2: oci01-flex)
     # ----------------------------------------------------
     code-server:
-      rule: "HostRegexp(`^code\\..+$`)"
+      rule: "Host(`code.example.com`)"
       entryPoints: ["websecure"]
       middlewares: ["authelia-sso", "app-fail2ban", "security-headers"]
       service: "codeserver-svc"
@@ -257,7 +257,7 @@ http:
     # Seafile (VM1: zap-vps)
     # ----------------------------------------------------
     seafile:
-      rule: "HostRegexp(`^(mycloud|seafile)\\..+$`)"
+      rule: "Host(`mycloud.example.com`, `seafile.example.com`)"
       entryPoints: ["websecure"]
       middlewares: ["app-fail2ban", "security-headers"]
       service: "seafile-svc"
@@ -268,7 +268,7 @@ http:
     # OnlyOffice Document Server (VM3: Compute Node)
     # ----------------------------------------------------
     onlyoffice:
-      rule: "HostRegexp(`^(onlyoffice|onlyoffice-doc-server|onlyoffice-documentserver|office|docs)\\..+$`)"
+      rule: "Host(`onlyoffice.example.com`, `onlyoffice-doc-server.example.com`, `onlyoffice-documentserver.example.com`, `office.example.com`, `docs.example.com`)"
       entryPoints: ["websecure"]
       middlewares: ["app-fail2ban", "onlyoffice-headers"]
       service: "onlyoffice-svc"
@@ -279,7 +279,7 @@ http:
     # Immich Photo Library (VM1: zap-vps)
     # ----------------------------------------------------
     immich:
-      rule: "HostRegexp(`^photos\\..+$`)"
+      rule: "Host(`photos.example.com`, `immich.example.com`)"
       entryPoints: ["websecure"]
       middlewares: ["app-fail2ban", "security-headers"]
       service: "immich-svc"
@@ -290,7 +290,7 @@ http:
     # LLDAP - Lightweight LDAP Directory & User Management GUI
     # ----------------------------------------------------
     lldap:
-      rule: "HostRegexp(`^lldap\\..+$`)"
+      rule: "Host(`lldap.example.com`)"
       entryPoints: ["websecure"]
       middlewares: ["app-fail2ban", "security-headers", "compression"]
       service: "lldap-svc"
@@ -301,7 +301,7 @@ http:
     # Jellyfin Media Streaming (VM2: oci01-flex)
     # ----------------------------------------------------
     jellyfin:
-      rule: "HostRegexp(`^jellyfin\\..+$`)"
+      rule: "Host(`jellyfin.example.com`, `media.example.com`, `stream.example.com`)"
       entryPoints: ["websecure"]
       middlewares: ["app-fail2ban", "security-headers"]
       service: "jellyfin-svc"
@@ -312,7 +312,7 @@ http:
     # Navidrome Music Server (VM2: oci01-flex)
     # ----------------------------------------------------
     navidrome:
-      rule: "HostRegexp(`^music\\..+$`)"
+      rule: "Host(`music.example.com`, `navidrome.example.com`)"
       entryPoints: ["websecure"]
       middlewares: ["app-fail2ban", "security-headers"]
       service: "navidrome-svc"
@@ -323,7 +323,7 @@ http:
     # qBittorrent WebUI (VM2: oci01-flex)
     # ----------------------------------------------------
     qbittorrent:
-      rule: "HostRegexp(`^torrents\\..+$`)"
+      rule: "Host(`torrents.example.com`, `torrent.example.com`, `qbittorrent.example.com`)"
       entryPoints: ["websecure"]
       middlewares: ["authelia-sso", "app-fail2ban", "security-headers"]
       service: "qbittorrent-svc"
