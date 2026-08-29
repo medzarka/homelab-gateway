@@ -11,6 +11,7 @@ services:
     networks:
       - shared_net
       - homelab_swarm_net
+    environment:
       - ROOT_DOMAIN=${ROOT_DOMAIN:-example.com}
       - LLDAP_BASE_DN=${LLDAP_BASE_DN:-}
       - LLDAP_ADMIN_USER=${LLDAP_ADMIN_USER:-admin}
