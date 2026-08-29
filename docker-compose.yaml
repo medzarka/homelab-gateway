@@ -11,12 +11,12 @@ services:
     networks:
       - shared_net
       - homelab_swarm_net
-    environment:
       - ROOT_DOMAIN=${ROOT_DOMAIN:-example.com}
+      - LLDAP_BASE_DN=${LLDAP_BASE_DN:-}
       - LLDAP_ADMIN_USER=${LLDAP_ADMIN_USER:-admin}
       - LLDAP_ADMIN_PASSWORD=${LLDAP_ADMIN_PASSWORD:-adminpassword}
-      - AUTHELIA_LDAP_USER=${AUTHELIA_LDAP_USER:-authelia}
-      - AUTHELIA_LDAP_PASSWORD=${AUTHELIA_LDAP_PASSWORD:-authelia_service_secret_pass}
+      - AUTHELIA_LDAP_USER=${AUTHELIA_LDAP_USER:-${LLDAP_ADMIN_USER:-admin}}
+      - AUTHELIA_LDAP_PASSWORD=${AUTHELIA_LDAP_PASSWORD:-${LLDAP_ADMIN_PASSWORD:-adminpassword}}
     volumes:
       - ${DATA_DIR:-/home/${SYSTEM_USER:-homelab}/DATA}/gateway/data:/data
       - ./authelia:/authelia_src
@@ -31,11 +31,11 @@ services:
         chmod 600 /data/traefik/acme.json
 
         ROOT_DOM="$${ROOT_DOMAIN:-example.com}"
-        DOMAIN_DC=$$(echo "$$ROOT_DOM" | sed 's/\./,dc=/g' | sed 's/^/dc=/')
-        AUTH_USER="$${AUTHELIA_LDAP_USER:-authelia}"
-        AUTH_PASS="$${AUTHELIA_LDAP_PASSWORD:-authelia_service_secret_pass}"
+        DOMAIN_DC="$${LLDAP_BASE_DN:-$$(echo "$$ROOT_DOM" | sed 's/\./,dc=/g' | sed 's/^/dc=/')}"
         ADMIN_USER="$${LLDAP_ADMIN_USER:-admin}"
         ADMIN_PASS="$${LLDAP_ADMIN_PASSWORD:-adminpassword}"
+        AUTH_USER="$${AUTHELIA_LDAP_USER:-$$ADMIN_USER}"
+        AUTH_PASS="$${AUTHELIA_LDAP_PASSWORD:-$$ADMIN_PASS}"
         echo ">>> [Storage Init] Interpolating ROOT_DOMAIN ($$ROOT_DOM), DOMAIN_DC ($$DOMAIN_DC), AUTH_USER ($$AUTH_USER) into runtime configs..."
 
         # Generate active configs from templates to data volume (prevents Arcane sync conflicts)
@@ -44,16 +44,18 @@ services:
         sed "s|example.com|$$ROOT_DOM|g" /dynamic_src/middleware.yaml > /data/traefik/dynamic_generated/middleware.yaml
         sed "s|example.com|$$ROOT_DOM|g" /dynamic_src/routes.yaml > /data/traefik/dynamic_generated/routes.yaml
 
-        # Automatic background provisioning of authelia service user in LLDAP
-        (
-          apk add --no-cache openldap-clients >/dev/null 2>&1 || true
-          until nc -z lldap 3890 2>/dev/null; do sleep 2; done
-          sleep 2
-          printf "dn: uid=%%s,ou=people,%%s\nobjectClass: person\nobjectClass: organizationalPerson\nobjectClass: inetOrgPerson\nuid: %%s\ncn: %%s\nsn: Service\nmail: %%s@%%s\nuserPassword: %%s\n" "$$AUTH_USER" "$$DOMAIN_DC" "$$AUTH_USER" "$$AUTH_USER" "$$AUTH_USER" "$$ROOT_DOM" "$$AUTH_PASS" > /tmp/authelia.ldif
-          ldapadd -x -H ldap://lldap:3890 -D "uid=$$ADMIN_USER,ou=people,$$DOMAIN_DC" -w "$$ADMIN_PASS" -f /tmp/authelia.ldif 2>/dev/null || true
-          ldappasswd -x -H ldap://lldap:3890 -D "uid=$$ADMIN_USER,ou=people,$$DOMAIN_DC" -w "$$ADMIN_PASS" -s "$$AUTH_PASS" "uid=$$AUTH_USER,ou=people,$$DOMAIN_DC" 2>/dev/null || true
-          echo ">>> [Storage Init] LLDAP automated user provisioning complete."
-        ) &
+        # Automatic background provisioning of authelia service user in LLDAP if separate from admin
+        if [ "$$AUTH_USER" != "$$ADMIN_USER" ]; then
+          (
+            apk add --no-cache openldap-clients >/dev/null 2>&1 || true
+            until nc -z lldap 3890 2>/dev/null; do sleep 2; done
+            sleep 2
+            printf "dn: uid=%%s,ou=people,%%s\nobjectClass: person\nobjectClass: organizationalPerson\nobjectClass: inetOrgPerson\nuid: %%s\ncn: %%s\nsn: Service\nmail: %%s@%%s\nuserPassword: %%s\n" "$$AUTH_USER" "$$DOMAIN_DC" "$$AUTH_USER" "$$AUTH_USER" "$$AUTH_USER" "$$ROOT_DOM" "$$AUTH_PASS" > /tmp/authelia.ldif
+            ldapadd -x -H ldap://lldap:3890 -D "uid=$$ADMIN_USER,ou=people,$$DOMAIN_DC" -w "$$ADMIN_PASS" -f /tmp/authelia.ldif 2>/dev/null || true
+            ldappasswd -x -H ldap://lldap:3890 -D "uid=$$ADMIN_USER,ou=people,$$DOMAIN_DC" -w "$$ADMIN_PASS" -s "$$AUTH_PASS" "uid=$$AUTH_USER,ou=people,$$DOMAIN_DC" 2>/dev/null || true
+            echo ">>> [Storage Init] LLDAP automated user provisioning complete."
+          ) &
+        fi
 
         echo ">>> [Storage Init] Runtime configs generated. Storage guard active."
         touch /data/init_done
@@ -160,7 +162,7 @@ services:
       - ${DATA_DIR:-/home/${SYSTEM_USER:-homelab}/DATA}/gateway/data/authelia:/config/data
     environment:
       - TZ=${TZ:-UTC}
-      - AUTHELIA_AUTHENTICATION_BACKEND_LDAP_PASSWORD=${AUTHELIA_LDAP_PASSWORD:-authelia_service_secret_pass}
+      - AUTHELIA_AUTHENTICATION_BACKEND_LDAP_PASSWORD=${AUTHELIA_LDAP_PASSWORD:-${LLDAP_ADMIN_PASSWORD:-adminpassword}}
       - AUTHELIA_NOTIFIER_SMTP_ADDRESS=smtp://${SMTP_SERVER:-smtp.gmail.com}:${SMTP_PORT:-587}
       - AUTHELIA_NOTIFIER_SMTP_USERNAME=${SMTP_USERNAME}
       - AUTHELIA_NOTIFIER_SMTP_PASSWORD=${SMTP_PASSWORD}
