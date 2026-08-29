@@ -200,8 +200,7 @@ services:
   # ========================================================
   # TRAEFIK V3 (Edge Ingress, SSL & Fail2Ban Protection)
   # ========================================================
-  
-  :
+  traefik:
     image: traefik:v3.1
     container_name: traefik
     restart: unless-stopped
