@@ -244,7 +244,7 @@ services:
       - "--certificatesresolvers.cloudflare.acme.dnschallenge.resolvers=1.1.1.1:53,1.0.0.1:53"
       - "--certificatesresolvers.cloudflare.acme.email=${ACME_EMAIL}"
       - "--certificatesresolvers.cloudflare.acme.storage=/etc/traefik/acme.json"
-      - "--experimental.plugins.fail2ban.modulename=github.com/tomMoulard/fail2ban"
+      - "--experimental.plugins.fail2ban.moduleName=github.com/tomMoulard/fail2ban"
       - "--experimental.plugins.fail2ban.version=v0.9.0"
       - "--metrics.prometheus=true"
       - "--accesslog=true"
