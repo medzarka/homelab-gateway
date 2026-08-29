@@ -200,7 +200,8 @@ services:
   # ========================================================
   # TRAEFIK V3 (Edge Ingress, SSL & Fail2Ban Protection)
   # ========================================================
-  traefik:
+  
+  :
     image: traefik:v3.1
     container_name: traefik
     restart: unless-stopped
@@ -215,6 +216,7 @@ services:
       - CLOUDFLARE_API_TOKEN=${CLOUDFLARE_API_TOKEN}
       - CLOUDFLARE_DNS_API_TOKEN=${CLOUDFLARE_API_TOKEN}
       - ACME_EMAIL=${ACME_EMAIL}
+      - DOCKER_API_VERSION=1.45
     volumes:
       - ${DATA_DIR:-/home/${SYSTEM_USER:-homelab}/DATA}/gateway/data/traefik/acme.json:/etc/traefik/acme.json
       - ${DATA_DIR:-/home/${SYSTEM_USER:-homelab}/DATA}/gateway/data/traefik/logs:/var/log/traefik
