@@ -132,6 +132,14 @@ services:
       timeout: 5s
       retries: 5
       start_period: 10s
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.lldap.rule=Host(`lldap.${ROOT_DOMAIN:-example.com}`)"
+      - "traefik.http.routers.lldap.entrypoints=websecure"
+      - "traefik.http.routers.lldap.tls=true"
+      - "traefik.http.routers.lldap.middlewares=app-fail2ban@file,security-headers@file,compression@file"
+      - "traefik.http.services.lldap.loadbalancer.server.port=17170"
+      - "traefik.docker.network=${SHARED_NETWORK:-shared_net}"
     logging:
       driver: "json-file"
       options:
@@ -172,6 +180,14 @@ services:
       timeout: 5s
       retries: 3
       start_period: 10s
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.authelia.rule=Host(`auth.${ROOT_DOMAIN:-example.com}`, `authelia.${ROOT_DOMAIN:-example.com}`)"
+      - "traefik.http.routers.authelia.entrypoints=websecure"
+      - "traefik.http.routers.authelia.tls=true"
+      - "traefik.http.routers.authelia.middlewares=app-fail2ban@file,security-headers@file,compression@file"
+      - "traefik.http.services.authelia.loadbalancer.server.port=9091"
+      - "traefik.docker.network=${SHARED_NETWORK:-shared_net}"
     logging:
       driver: "json-file"
       options:
@@ -214,6 +230,11 @@ services:
       - "--entryPoints.websecure.http.tls.certResolver=cloudflare"
       - "--entryPoints.websecure.http.tls.domains[0].main=${ROOT_DOMAIN:-example.com}"
       - "--entryPoints.websecure.http.tls.domains[0].sans=*.${ROOT_DOMAIN:-example.com}"
+      - "--providers.docker=true"
+      - "--providers.docker.endpoint=tcp://gateway_socket_proxy:2375"
+      - "--providers.docker.exposedbydefault=false"
+      - "--providers.docker.network=${SHARED_NETWORK:-shared_net}"
+      - "--providers.docker.watch=true"
       - "--providers.file.directory=/etc/traefik/dynamic"
       - "--providers.file.watch=true"
       - "--certificatesresolvers.cloudflare.acme.dnschallenge.provider=cloudflare"
@@ -226,6 +247,14 @@ services:
       - "--accesslog=true"
       - "--accesslog.filepath=/var/log/traefik/access.log"
       - "--log.level=INFO"
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.traefik-dashboard.rule=Host(`traefik.${ROOT_DOMAIN:-example.com}`)"
+      - "traefik.http.routers.traefik-dashboard.entrypoints=websecure"
+      - "traefik.http.routers.traefik-dashboard.tls=true"
+      - "traefik.http.routers.traefik-dashboard.middlewares=authelia-sso@file,app-fail2ban@file,security-headers@file,compression@file"
+      - "traefik.http.routers.traefik-dashboard.service=api@internal"
+      - "traefik.docker.network=${SHARED_NETWORK:-shared_net}"
     networks:
       - homelab_swarm_net
       - shared_net

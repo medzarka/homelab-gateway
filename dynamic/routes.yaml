@@ -268,7 +268,7 @@ http:
     # OnlyOffice Document Server (VM3: Compute Node)
     # ----------------------------------------------------
     onlyoffice:
-      rule: "Host(`onlyoffice.example.com`, `onlyoffice-doc-server.example.com`, `onlyoffice-documentserver.example.com`, `office.example.com`, `docs.example.com`)"
+      rule: "Host(`onlyoffice.example.com`)"
       entryPoints: ["websecure"]
       middlewares: ["app-fail2ban", "onlyoffice-headers"]
       service: "onlyoffice-svc"
