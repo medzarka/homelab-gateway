@@ -225,7 +225,7 @@ services:
       - "traefik.http.routers.authelia.entrypoints=websecure"
       - "traefik.http.routers.authelia.tls=true"
       - "traefik.http.routers.authelia.tls.certresolver=cloudflare"
-      - "traefik.http.routers.authelia.middlewares=app-fail2ban@file,security-headers@file,compression@file"
+      - "traefik.http.routers.authelia.middlewares=authelia-canonical-redirect@file,app-fail2ban@file,security-headers@file,compression@file"
       - "traefik.http.services.authelia.loadbalancer.server.port=9091"
       - "traefik.docker.network=${SWARM_NETWORK:-homelab_swarm_net}"
     logging:

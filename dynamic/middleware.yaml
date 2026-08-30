@@ -53,6 +53,15 @@ http:
           - "Remote-Email"
 
     # ----------------------------------------------------
+    # Authelia Canonical Domain Redirect (authelia.domain -> auth.domain)
+    # ----------------------------------------------------
+    authelia-canonical-redirect:
+      redirectRegex:
+        regex: "^https?://authelia\\.([^/]+)/(.*)$"
+        replacement: "https://auth.${1}/${2}"
+        permanent: true
+
+    # ----------------------------------------------------
     # Traefik Dashboard Redirect (/ -> /dashboard/)
     # ----------------------------------------------------
     traefik-dashboard-redirect:
