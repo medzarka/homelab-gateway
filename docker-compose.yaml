@@ -168,6 +168,10 @@ services:
     environment:
       - TZ=${TZ:-UTC}
       - AUTHELIA_AUTHENTICATION_BACKEND_LDAP_PASSWORD=${AUTHELIA_LDAP_PASSWORD:-${LLDAP_ADMIN_PASSWORD:-adminpassword}}
+      - AUTHELIA_NOTIFIER_SMTP_ADDRESS=smtp://${SMTP_SERVER:-smtp.gmail.com}:${SMTP_PORT:-587}
+      - AUTHELIA_NOTIFIER_SMTP_USERNAME=${SMTP_USERNAME}
+      - AUTHELIA_NOTIFIER_SMTP_PASSWORD=${SMTP_PASSWORD}
+      - AUTHELIA_NOTIFIER_SMTP_SENDER=${SMTP_SENDER:-Authelia <authelia@${ROOT_DOMAIN:-example.com}>}
       - X_AUTHELIA_CONFIG=/config/data/configuration.yml
     networks:
       - shared_net
