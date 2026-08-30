@@ -16,8 +16,8 @@ services:
       - LLDAP_BASE_DN=${LLDAP_BASE_DN:-}
       - LLDAP_ADMIN_USER=${LLDAP_ADMIN_USER:-admin}
       - LLDAP_ADMIN_PASSWORD=${LLDAP_ADMIN_PASSWORD:-adminpassword}
-      - AUTHELIA_LDAP_USER=${AUTHELIA_LDAP_USER:-${LLDAP_ADMIN_USER:-admin}}
-      - AUTHELIA_LDAP_PASSWORD=${AUTHELIA_LDAP_PASSWORD:-${LLDAP_ADMIN_PASSWORD:-adminpassword}}
+      - AUTHELIA_LDAP_USER=${AUTHELIA_LDAP_USER:-authelia}
+      - AUTHELIA_LDAP_PASSWORD=${AUTHELIA_LDAP_PASSWORD:-adminpassword}
     volumes:
       - ${DATA_DIR:-/home/${SYSTEM_USER:-homelab}/DATA}/gateway/data:/data
       - ./authelia:/authelia_src
@@ -26,7 +26,7 @@ services:
     command:
       - |
         echo ">>> [Storage Init] Setting up directories and permissions..."
-        mkdir -p /data/traefik/logs /data/authelia /data/lldap
+        mkdir -p /data/traefik/logs /data/authelia /data/lldap /data/traefik/dynamic_generated
         touch /data/traefik/acme.json /data/traefik/logs/access.log
         chmod -R 775 /data
         chmod 600 /data/traefik/acme.json
@@ -35,7 +35,7 @@ services:
         DOMAIN_DC="$${LLDAP_BASE_DN:-$$(echo "$$ROOT_DOM" | sed 's/\./,dc=/g' | sed 's/^/dc=/')}"
         ADMIN_USER="$${LLDAP_ADMIN_USER:-admin}"
         ADMIN_PASS="$${LLDAP_ADMIN_PASSWORD:-adminpassword}"
-        AUTH_USER="$${AUTHELIA_LDAP_USER:-$$ADMIN_USER}"
+        AUTH_USER="$${AUTHELIA_LDAP_USER:-authelia}"
         AUTH_PASS="$${AUTHELIA_LDAP_PASSWORD:-$$ADMIN_PASS}"
         echo ">>> [Storage Init] Interpolating ROOT_DOMAIN ($$ROOT_DOM), DOMAIN_DC ($$DOMAIN_DC), AUTH_USER ($$AUTH_USER) into runtime configs..."
 
@@ -46,17 +46,28 @@ services:
         sed "s|example.com|$$ROOT_DOM|g" /dynamic_src/middleware.yaml > /data/traefik/dynamic_generated/middleware.yaml
         [ -f /dynamic_src/routes.yaml ] && [ -s /dynamic_src/routes.yaml ] && sed "s|example.com|$$ROOT_DOM|g" /dynamic_src/routes.yaml > /data/traefik/dynamic_generated/routes.yaml || true
 
-        # Automatic background provisioning of authelia service user in LLDAP if separate from admin
+        # Synchronous provisioning of authelia service user in LLDAP if separate from admin
         if [ "$$AUTH_USER" != "$$ADMIN_USER" ]; then
-          (
-            apk add --no-cache openldap-clients >/dev/null 2>&1 || true
-            until nc -z lldap 3890 2>/dev/null; do sleep 2; done
+          echo ">>> [Storage Init] Provisioning dedicated service user '$$AUTH_USER' in LLDAP..."
+          apk add --no-cache openldap-clients >/dev/null 2>&1 || true
+          until nc -z lldap 3890 2>/dev/null; do
+            echo ">>> [Storage Init] Waiting for LLDAP port 3890..."
             sleep 2
-            printf "dn: uid=%%s,ou=people,%%s\nobjectClass: person\nobjectClass: organizationalPerson\nobjectClass: inetOrgPerson\nuid: %%s\ncn: %%s\nsn: Service\nmail: %%s@%%s\nuserPassword: %%s\n" "$$AUTH_USER" "$$DOMAIN_DC" "$$AUTH_USER" "$$AUTH_USER" "$$AUTH_USER" "$$ROOT_DOM" "$$AUTH_PASS" > /tmp/authelia.ldif
-            ldapadd -x -H ldap://lldap:3890 -D "uid=$$ADMIN_USER,ou=people,$$DOMAIN_DC" -w "$$ADMIN_PASS" -f /tmp/authelia.ldif 2>/dev/null || true
-            ldappasswd -x -H ldap://lldap:3890 -D "uid=$$ADMIN_USER,ou=people,$$DOMAIN_DC" -w "$$ADMIN_PASS" -s "$$AUTH_PASS" "uid=$$AUTH_USER,ou=people,$$DOMAIN_DC" 2>/dev/null || true
-            echo ">>> [Storage Init] LLDAP automated user provisioning complete."
-          ) &
+          done
+          sleep 2
+
+          # Create LDIF to add user
+          printf "dn: uid=%%s,ou=people,%%s\nobjectClass: top\nobjectClass: person\nobjectClass: organizationalPerson\nobjectClass: inetOrgPerson\nuid: %%s\ncn: %%s\nsn: Service\nmail: %%s@%%s\nuserPassword: %%s\n" "$$AUTH_USER" "$$DOMAIN_DC" "$$AUTH_USER" "$$AUTH_USER" "$$AUTH_USER" "$$ROOT_DOM" "$$AUTH_PASS" > /tmp/authelia.ldif
+          ldapadd -x -H ldap://lldap:3890 -D "uid=$$ADMIN_USER,ou=people,$$DOMAIN_DC" -w "$$ADMIN_PASS" -f /tmp/authelia.ldif 2>/dev/null || true
+
+          # Ensure password is synchronized with AUTHELIA_LDAP_PASSWORD
+          ldappasswd -x -H ldap://lldap:3890 -D "uid=$$ADMIN_USER,ou=people,$$DOMAIN_DC" -w "$$ADMIN_PASS" -s "$$AUTH_PASS" "uid=$$AUTH_USER,ou=people,$$DOMAIN_DC" 2>/dev/null || true
+
+          # Add authelia user to lldap_password_manager group
+          printf "dn: cn=lldap_password_manager,ou=groups,%%s\nchangetype: modify\nadd: member\nmember: uid=%%s,ou=people,%%s\n" "$$DOMAIN_DC" "$$AUTH_USER" "$$DOMAIN_DC" > /tmp/authelia_group.ldif
+          ldapmodify -x -H ldap://lldap:3890 -D "uid=$$ADMIN_USER,ou=people,$$DOMAIN_DC" -w "$$ADMIN_PASS" -f /tmp/authelia_group.ldif 2>/dev/null || true
+
+          echo ">>> [Storage Init] LLDAP service user '$$AUTH_USER' provisioning verified."
         fi
 
         echo ">>> [Storage Init] Runtime configs generated. Storage guard active."
@@ -264,7 +275,7 @@ services:
       - "traefik.http.routers.traefik-dashboard.entrypoints=websecure"
       - "traefik.http.routers.traefik-dashboard.tls=true"
       - "traefik.http.routers.traefik-dashboard.tls.certresolver=cloudflare"
-      - "traefik.http.routers.traefik-dashboard.middlewares=authelia-sso@file,app-fail2ban@file,security-headers@file,compression@file"
+      - "traefik.http.routers.traefik-dashboard.middlewares=traefik-dashboard-redirect@file,authelia-sso@file,app-fail2ban@file,security-headers@file,compression@file"
       - "traefik.http.routers.traefik-dashboard.service=api@internal"
       - "traefik.docker.network=${SWARM_NETWORK:-homelab_swarm_net}"
     networks:

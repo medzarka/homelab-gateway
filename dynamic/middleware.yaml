@@ -43,7 +43,7 @@ http:
     # ----------------------------------------------------
     authelia-sso:
       forwardAuth:
-        address: "http://authelia:9091/api/authz/forward-auth?rd=https%3A%2F%2Fauth.example.com%2F"
+        address: "http://authelia:9091/api/authz/forward-auth"
         trustForwardHeader: true
         maxResponseBodySize: 2097152
         authResponseHeaders:
@@ -51,6 +51,15 @@ http:
           - "Remote-Groups"
           - "Remote-Name"
           - "Remote-Email"
+
+    # ----------------------------------------------------
+    # Traefik Dashboard Redirect (/ -> /dashboard/)
+    # ----------------------------------------------------
+    traefik-dashboard-redirect:
+      redirectRegex:
+        regex: "^https?://([^/]+)/?$"
+        replacement: "https://${1}/dashboard/"
+        permanent: true
 
     # ----------------------------------------------------
     # Fail2Ban In-Memory Protection (tomMoulard/fail2ban)
