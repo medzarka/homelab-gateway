@@ -49,23 +49,36 @@ services:
         # Synchronous provisioning of authelia service user in LLDAP if separate from admin
         if [ "$$AUTH_USER" != "$$ADMIN_USER" ]; then
           echo ">>> [Storage Init] Provisioning dedicated service user '$$AUTH_USER' in LLDAP..."
-          apk add --no-cache openldap-clients >/dev/null 2>&1 || true
-          until nc -z lldap 3890 2>/dev/null; do
-            echo ">>> [Storage Init] Waiting for LLDAP port 3890..."
+          apk add --no-cache curl openldap-clients >/dev/null 2>&1 || true
+          until nc -z lldap 17170 2>/dev/null && nc -z lldap 3890 2>/dev/null; do
+            echo ">>> [Storage Init] Waiting for LLDAP API (17170) & LDAP (3890)..."
             sleep 2
           done
           sleep 2
 
-          # Create LDIF to add user
-          printf "dn: uid=%%s,ou=people,%%s\nobjectClass: top\nobjectClass: person\nobjectClass: organizationalPerson\nobjectClass: inetOrgPerson\nuid: %%s\ncn: %%s\nsn: Service\nmail: %%s@%%s\nuserPassword: %%s\n" "$$AUTH_USER" "$$DOMAIN_DC" "$$AUTH_USER" "$$AUTH_USER" "$$AUTH_USER" "$$ROOT_DOM" "$$AUTH_PASS" > /tmp/authelia.ldif
-          ldapadd -x -H ldap://lldap:3890 -D "uid=$$ADMIN_USER,ou=people,$$DOMAIN_DC" -w "$$ADMIN_PASS" -f /tmp/authelia.ldif 2>/dev/null || true
+          # 1. Login to LLDAP API as admin to obtain JWT token
+          LLDAP_TOKEN=$$(curl -s http://lldap:17170/auth/simple/login \
+            -H "Content-Type: application/json" \
+            -d "{\"username\": \"$$ADMIN_USER\", \"password\": \"$$ADMIN_PASS\"}" | sed -E 's/.*"token":"([^"]+)".*/\1/')
 
-          # Ensure password is synchronized with AUTHELIA_LDAP_PASSWORD
+          # 2. Create the authelia user via LLDAP GraphQL API if not already present
+          if [ -n "$$LLDAP_TOKEN" ]; then
+            echo ">>> [Storage Init] Acquired LLDAP admin token. Creating '$$AUTH_USER' user..."
+            curl -s -X POST http://lldap:17170/api/graphql \
+              -H "Authorization: Bearer $$LLDAP_TOKEN" \
+              -H "Content-Type: application/json" \
+              -d "{\"query\":\"mutation { createUser(user: {id: \\\"$$AUTH_USER\\\", email: \\\"$$AUTH_USER@$$ROOT_DOM\\\", displayName: \\\"Authelia Service Account\\\"}) { id } }\"}" >/dev/null 2>&1 || true
+
+            # 3. Add authelia user to lldap_password_manager group
+            curl -s -X POST http://lldap:17170/api/graphql \
+              -H "Authorization: Bearer $$LLDAP_TOKEN" \
+              -H "Content-Type: application/json" \
+              -d "{\"query\":\"mutation { addUserToGroup(userId: \\\"$$AUTH_USER\\\", groupName: \\\"lldap_password_manager\\\") { ok } }\"}" >/dev/null 2>&1 || true
+          fi
+
+          # 4. Set/Synchronize authelia password via RFC 3062 ldappasswd
+          echo ">>> [Storage Init] Setting password for '$$AUTH_USER' via ldappasswd..."
           ldappasswd -x -H ldap://lldap:3890 -D "uid=$$ADMIN_USER,ou=people,$$DOMAIN_DC" -w "$$ADMIN_PASS" -s "$$AUTH_PASS" "uid=$$AUTH_USER,ou=people,$$DOMAIN_DC" 2>/dev/null || true
-
-          # Add authelia user to lldap_password_manager group
-          printf "dn: cn=lldap_password_manager,ou=groups,%%s\nchangetype: modify\nadd: member\nmember: uid=%%s,ou=people,%%s\n" "$$DOMAIN_DC" "$$AUTH_USER" "$$DOMAIN_DC" > /tmp/authelia_group.ldif
-          ldapmodify -x -H ldap://lldap:3890 -D "uid=$$ADMIN_USER,ou=people,$$DOMAIN_DC" -w "$$ADMIN_PASS" -f /tmp/authelia_group.ldif 2>/dev/null || true
 
           echo ">>> [Storage Init] LLDAP service user '$$AUTH_USER' provisioning verified."
         fi
