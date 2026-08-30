@@ -45,6 +45,7 @@ http:
       forwardAuth:
         address: "http://authelia:9091/api/authz/forward-auth?rd=https%3A%2F%2Fauth.example.com%2F"
         trustForwardHeader: true
+        maxResponseBodySize: 2097152
         authResponseHeaders:
           - "Remote-User"
           - "Remote-Groups"
