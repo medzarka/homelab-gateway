@@ -145,7 +145,7 @@ services:
       - "traefik.http.routers.lldap.tls.certresolver=cloudflare"
       - "traefik.http.routers.lldap.middlewares=app-fail2ban@file,security-headers@file,compression@file"
       - "traefik.http.services.lldap.loadbalancer.server.port=17170"
-      - "traefik.docker.network=${SWARM_NETWORK:-homelab_swarm_net}"
+      - "traefik.docker.network=${SHARED_NETWORK:-shared_net}"
     logging:
       driver: "json-file"
       options:
@@ -194,7 +194,7 @@ services:
       - "traefik.http.routers.authelia.tls.certresolver=cloudflare"
       - "traefik.http.routers.authelia.middlewares=app-fail2ban@file,security-headers@file,compression@file"
       - "traefik.http.services.authelia.loadbalancer.server.port=9091"
-      - "traefik.docker.network=${SWARM_NETWORK:-homelab_swarm_net}"
+      - "traefik.docker.network=${SHARED_NETWORK:-shared_net}"
     logging:
       driver: "json-file"
       options:
@@ -243,7 +243,7 @@ services:
       - "--providers.docker=true"
       - "--providers.docker.endpoint=tcp://gateway_socket_proxy:2375"
       - "--providers.docker.exposedbydefault=false"
-      - "--providers.docker.network=${SWARM_NETWORK:-homelab_swarm_net}"
+      - "--providers.docker.network=${SHARED_NETWORK:-shared_net}"
       - "--providers.docker.watch=true"
       - "--providers.file.directory=/etc/traefik/dynamic"
       - "--providers.file.watch=true"
@@ -265,7 +265,7 @@ services:
       - "traefik.http.routers.traefik-dashboard.tls.certresolver=cloudflare"
       - "traefik.http.routers.traefik-dashboard.middlewares=authelia-sso@file,app-fail2ban@file,security-headers@file,compression@file"
       - "traefik.http.routers.traefik-dashboard.service=api@internal"
-      - "traefik.docker.network=${SWARM_NETWORK:-homelab_swarm_net}"
+      - "traefik.docker.network=${SHARED_NETWORK:-shared_net}"
     networks:
       - homelab_swarm_net
       - shared_net

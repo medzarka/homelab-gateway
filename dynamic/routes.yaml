@@ -1,14 +1,481 @@
-# ==============================================================================
-# TRAEFIK DYNAMIC FILE PROVIDER (External & Non-Docker Upstreams)
-# ==============================================================================
-# NOTE: All Homelab Docker containers (Homepage, OnlyOffice, SearXNG, Ollama,
-# Speaches, Firecrawl, Sandbox, Knowledge-MCP, Seafile, Immich, etc.) define
-# their routing rules directly via container labels in their docker-compose.yaml.
-#
-# Use this file ONLY for manual external upstream hosts (e.g. Proxmox, bare-metal
-# hardware, or non-containerized external Tailscale nodes).
-# ==============================================================================
-
 http:
-  routers: {}
-  services: {}
+  routers:
+    # ----------------------------------------------------
+    # Authelia - Centralized SSO Authentication Portal
+    # ----------------------------------------------------
+    authelia:
+      rule: "Host(`auth.example.com`, `authelia.example.com`)"
+      entryPoints: ["websecure"]
+      middlewares: ["app-fail2ban", "security-headers", "compression"]
+      service: "authelia-svc"
+      tls:
+        certResolver: "cloudflare"
+
+    # ----------------------------------------------------
+    # Homepage - Unified Homelab Portal & Service Cockpit (SSO Protected)
+    # ----------------------------------------------------
+    homepage:
+      rule: "Host(`homelab.example.com`, `hub.example.com`)"
+      entryPoints: ["websecure"]
+      middlewares: ["authelia-sso", "app-fail2ban", "security-headers", "compression"]
+      service: "homepage-svc"
+      tls:
+        certResolver: "cloudflare"
+
+    # ----------------------------------------------------
+    # Beszel - Cluster Telemetry & Bandwidth Metrics (SSO 2FA Protected)
+    # ----------------------------------------------------
+    beszel:
+      rule: "Host(`metrics.example.com`, `beszel.example.com`)"
+      entryPoints: ["websecure"]
+      middlewares: ["authelia-sso", "app-fail2ban", "security-headers", "compression"]
+      service: "beszel-svc"
+      tls:
+        certResolver: "cloudflare"
+
+    # ----------------------------------------------------
+    # Dozzle - Centralized Multi-Node Container Log Viewer (SSO Protected)
+    # ----------------------------------------------------
+    dozzle:
+      rule: "Host(`logs.example.com`, `dozzle.example.com`)"
+      entryPoints: ["websecure"]
+      middlewares: ["authelia-sso", "app-fail2ban", "security-headers"]
+      service: "dozzle-svc"
+      tls:
+        certResolver: "cloudflare"
+
+    # ----------------------------------------------------
+    # Uptime Kuma - Multi-Node Status & Health Alerts
+    # ----------------------------------------------------
+    uptime-kuma:
+      rule: "Host(`status.example.com`, `uptimekuma.example.com`)"
+      entryPoints: ["websecure"]
+      middlewares: ["app-fail2ban", "security-headers", "compression"]
+      service: "uptimekuma-svc"
+      tls:
+        certResolver: "cloudflare"
+
+    # ----------------------------------------------------
+    # Traefik Web Dashboard & Visual Monitoring GUI (SSO 2FA Protected)
+    # ----------------------------------------------------
+    traefik-dashboard:
+      rule: "Host(`traefik.example.com`)"
+      entryPoints: ["websecure"]
+      middlewares: ["authelia-sso", "app-fail2ban", "security-headers", "compression"]
+      service: "api@internal"
+      tls:
+        certResolver: "cloudflare"
+
+    # ----------------------------------------------------
+    # Shortcut: /arcane -> Dedicated Arcane Domain
+    # ----------------------------------------------------
+    arcane-redirect:
+      rule: "Host(`homelab.example.com`, `hub.example.com`) && (Path(`/arcane`) || PathPrefix(`/arcane/`))"
+      entryPoints: ["websecure"]
+      middlewares: ["to-arcane-domain"]
+      service: "noop@internal"
+      tls:
+        certResolver: "cloudflare"
+
+    # ----------------------------------------------------
+    # Arcane Docker Management Cockpit (VM1: zap-vps)
+    # ----------------------------------------------------
+    arcane:
+      rule: "Host(`arcane.example.com`)"
+      entryPoints: ["websecure"]
+      middlewares: ["app-fail2ban", "security-headers", "compression"]
+      service: "arcane-svc"
+      tls:
+        certResolver: "cloudflare"
+
+    # ----------------------------------------------------
+    # LiteLLM AI Gateway (VM2: oci01-flex)
+    # ----------------------------------------------------
+    litellm:
+      rule: "Host(`litellm.example.com`)"
+      entryPoints: ["websecure"]
+      middlewares: ["app-fail2ban", "security-headers"]
+      service: "litellm-svc"
+      tls:
+        certResolver: "cloudflare"
+
+    # ----------------------------------------------------
+    # Open-WebUI (VM2: oci01-flex)
+    # ----------------------------------------------------
+    open-webui:
+      rule: "Host(`open-webui.example.com`, `chat.example.com`)"
+      entryPoints: ["websecure"]
+      middlewares: ["app-fail2ban", "security-headers", "compression"]
+      service: "openwebui-svc"
+      tls:
+        certResolver: "cloudflare"
+
+    # ----------------------------------------------------
+    # LiteLLM Helper (VM2: oci01-flex)
+    # ----------------------------------------------------
+    litellm-helper:
+      rule: "Host(`litellm-helper.example.com`)"
+      entryPoints: ["websecure"]
+      middlewares: ["app-fail2ban", "security-headers"]
+      service: "litellmhelper-svc"
+      tls:
+        certResolver: "cloudflare"
+
+    # ----------------------------------------------------
+    # Hermes Agent Dashboard & Gateway (VM2: oci01-flex)
+    # ----------------------------------------------------
+    hermes:
+      rule: "Host(`hermes.example.com`, `agents.example.com`)"
+      entryPoints: ["websecure"]
+      middlewares: ["authelia-sso", "app-fail2ban", "security-headers"]
+      service: "hermes-svc"
+      tls:
+        certResolver: "cloudflare"
+
+    # ----------------------------------------------------
+    # Homelab AI Knowledge Hub MCP Server (VM2: oci01-flex)
+    # ----------------------------------------------------
+    knowledge-mcp:
+      rule: "Host(`knowledge-mcp.example.com`, `knowledge.example.com`)"
+      entryPoints: ["websecure"]
+      middlewares: ["app-fail2ban", "security-headers"]
+      service: "knowledge-mcp-svc"
+      tls:
+        certResolver: "cloudflare"
+
+    # ----------------------------------------------------
+    # Homelab Agent Execution Sandbox MCP (VM3: zap-srv)
+    # ----------------------------------------------------
+    sandbox:
+      rule: "Host(`sandbox.example.com`)"
+      entryPoints: ["websecure"]
+      middlewares: ["app-fail2ban", "security-headers"]
+      service: "sandbox-svc"
+      tls:
+        certResolver: "cloudflare"
+
+    # ----------------------------------------------------
+    # Qdrant Vector Search Engine (VM2: oci01-flex)
+    # ----------------------------------------------------
+    qdrant:
+      rule: "Host(`qdrant.example.com`)"
+      entryPoints: ["websecure"]
+      middlewares: ["app-fail2ban", "security-headers"]
+      service: "qdrant-svc"
+      tls:
+        certResolver: "cloudflare"
+
+    # ----------------------------------------------------
+    # Mem0 Long-Term Memory Engine (VM2: oci01-flex)
+    # ----------------------------------------------------
+    mem0:
+      rule: "Host(`mem0.example.com`)"
+      entryPoints: ["websecure"]
+      middlewares: ["app-fail2ban", "security-headers"]
+      service: "mem0-svc"
+      tls:
+        certResolver: "cloudflare"
+
+    # ----------------------------------------------------
+    # Neo4j Graph Database Browser (VM2: oci01-flex)
+    # ----------------------------------------------------
+    neo4j:
+      rule: "Host(`neo4j.example.com`)"
+      entryPoints: ["websecure"]
+      middlewares: ["app-fail2ban", "security-headers"]
+      service: "neo4j-svc"
+      tls:
+        certResolver: "cloudflare"
+
+    # ----------------------------------------------------
+    # SearXNG Private Metasearch Engine (VM3: zap-srv)
+    # ----------------------------------------------------
+    searxng:
+      rule: "Host(`search.example.com`, `searxng.example.com`)"
+      entryPoints: ["websecure"]
+      middlewares: ["app-fail2ban", "security-headers"]
+      service: "searxng-svc"
+      tls:
+        certResolver: "cloudflare"
+
+    # ----------------------------------------------------
+    # Firecrawl LLM Web Scraper & Crawler (VM3: zap-srv)
+    # ----------------------------------------------------
+    firecrawl:
+      rule: "Host(`scraper.example.com`, `firecrawl.example.com`)"
+      entryPoints: ["websecure"]
+      middlewares: ["app-fail2ban", "security-headers"]
+      service: "firecrawl-svc"
+      tls:
+        certResolver: "cloudflare"
+
+    # ----------------------------------------------------
+    # Speaches Kokoro TTS, Whisper STT & Web Console (VM3: zap-srv)
+    # ----------------------------------------------------
+    speaches:
+      rule: "Host(`audio.example.com`, `voice.example.com`, `speaches.example.com`)"
+      entryPoints: ["websecure"]
+      middlewares: ["app-fail2ban", "security-headers"]
+      service: "speaches-svc"
+      tls:
+        certResolver: "cloudflare"
+
+    # ----------------------------------------------------
+    # Ollama Local AI & Vision Engine (VM3: zap-srv)
+    # ----------------------------------------------------
+    ollama:
+      rule: "Host(`ollama.example.com`)"
+      entryPoints: ["websecure"]
+      middlewares: ["app-fail2ban", "security-headers"]
+      service: "ollama-svc"
+      tls:
+        certResolver: "cloudflare"
+
+    # ----------------------------------------------------
+    # JupyterLab Data Science IDE (VM2: oci01-flex)
+    # ----------------------------------------------------
+    jupyter:
+      rule: "Host(`jupyter.example.com`)"
+      entryPoints: ["websecure"]
+      middlewares: ["authelia-sso", "app-fail2ban", "security-headers"]
+      service: "jupyter-svc"
+      tls:
+        certResolver: "cloudflare"
+
+    # ----------------------------------------------------
+    # VS Code Code-Server (VM2: oci01-flex)
+    # ----------------------------------------------------
+    code-server:
+      rule: "Host(`code.example.com`)"
+      entryPoints: ["websecure"]
+      middlewares: ["authelia-sso", "app-fail2ban", "security-headers"]
+      service: "codeserver-svc"
+      tls:
+        certResolver: "cloudflare"
+
+    # ----------------------------------------------------
+    # Seafile (VM1: zap-vps)
+    # ----------------------------------------------------
+    seafile:
+      rule: "Host(`mycloud.example.com`, `seafile.example.com`)"
+      entryPoints: ["websecure"]
+      middlewares: ["app-fail2ban", "security-headers"]
+      service: "seafile-svc"
+      tls:
+        certResolver: "cloudflare"
+
+    # ----------------------------------------------------
+    # OnlyOffice Document Server (VM3: Compute Node)
+    # ----------------------------------------------------
+    onlyoffice:
+      rule: "Host(`onlyoffice.example.com`)"
+      entryPoints: ["websecure"]
+      middlewares: ["app-fail2ban", "onlyoffice-headers"]
+      service: "onlyoffice-svc"
+      tls:
+        certResolver: "cloudflare"
+
+    # ----------------------------------------------------
+    # Immich Photo Library (VM1: zap-vps)
+    # ----------------------------------------------------
+    immich:
+      rule: "Host(`photos.example.com`, `immich.example.com`)"
+      entryPoints: ["websecure"]
+      middlewares: ["app-fail2ban", "security-headers"]
+      service: "immich-svc"
+      tls:
+        certResolver: "cloudflare"
+
+    # ----------------------------------------------------
+    # LLDAP - Lightweight LDAP Directory & User Management GUI
+    # ----------------------------------------------------
+    lldap:
+      rule: "Host(`lldap.example.com`)"
+      entryPoints: ["websecure"]
+      middlewares: ["app-fail2ban", "security-headers", "compression"]
+      service: "lldap-svc"
+      tls:
+        certResolver: "cloudflare"
+
+    # ----------------------------------------------------
+    # Jellyfin Media Streaming (VM2: oci01-flex)
+    # ----------------------------------------------------
+    jellyfin:
+      rule: "Host(`jellyfin.example.com`, `media.example.com`, `stream.example.com`)"
+      entryPoints: ["websecure"]
+      middlewares: ["app-fail2ban", "security-headers"]
+      service: "jellyfin-svc"
+      tls:
+        certResolver: "cloudflare"
+
+    # ----------------------------------------------------
+    # Navidrome Music Server (VM2: oci01-flex)
+    # ----------------------------------------------------
+    navidrome:
+      rule: "Host(`music.example.com`, `navidrome.example.com`)"
+      entryPoints: ["websecure"]
+      middlewares: ["app-fail2ban", "security-headers"]
+      service: "navidrome-svc"
+      tls:
+        certResolver: "cloudflare"
+
+    # ----------------------------------------------------
+    # qBittorrent WebUI (VM2: oci01-flex)
+    # ----------------------------------------------------
+    qbittorrent:
+      rule: "Host(`torrents.example.com`, `torrent.example.com`, `qbittorrent.example.com`)"
+      entryPoints: ["websecure"]
+      middlewares: ["authelia-sso", "app-fail2ban", "security-headers"]
+      service: "qbittorrent-svc"
+      tls:
+        certResolver: "cloudflare"
+
+  services:
+    noop:
+      loadBalancer:
+        servers:
+          - url: "http://127.0.0.1:80"
+
+    authelia-svc:
+      loadBalancer:
+        servers:
+          - url: "http://authelia:9091"
+
+    homepage-svc:
+      loadBalancer:
+        servers:
+          - url: "http://homepage:3000"
+
+    beszel-svc:
+      loadBalancer:
+        servers:
+          - url: "http://beszel:8090"
+
+    dozzle-svc:
+      loadBalancer:
+        servers:
+          - url: "http://dozzle:8080"
+
+    uptimekuma-svc:
+      loadBalancer:
+        servers:
+          - url: "http://uptime_kuma:3001"
+
+    arcane-svc:
+      loadBalancer:
+        servers:
+          - url: "http://arcane:3552"
+
+    litellm-svc:
+      loadBalancer:
+        servers:
+          - url: "http://litellm:4000"
+
+    openwebui-svc:
+      loadBalancer:
+        servers:
+          - url: "http://open-webui:8080"
+
+    litellmhelper-svc:
+      loadBalancer:
+        servers:
+          - url: "http://litellm-helper:5001"
+
+    hermes-svc:
+      loadBalancer:
+        servers:
+          - url: "http://hermes-agent:9119"
+
+    knowledge-mcp-svc:
+      loadBalancer:
+        servers:
+          - url: "http://knowledge-mcp:8095"
+
+    sandbox-svc:
+      loadBalancer:
+        servers:
+          - url: "http://compute_agent_sandbox:8088"
+        healthCheck:
+          path: "/health"
+          interval: "10s"
+          timeout: "3s"
+
+    qdrant-svc:
+      loadBalancer:
+        servers:
+          - url: "http://qdrant:6333"
+
+    mem0-svc:
+      loadBalancer:
+        servers:
+          - url: "http://mem0-api:8000"
+
+    neo4j-svc:
+      loadBalancer:
+        servers:
+          - url: "http://neo4j:7474"
+
+    searxng-svc:
+      loadBalancer:
+        servers:
+          - url: "http://compute_searxng:8080"
+
+    firecrawl-svc:
+      loadBalancer:
+        servers:
+          - url: "http://compute_firecrawl_api:3036"
+
+    speaches-svc:
+      loadBalancer:
+        servers:
+          - url: "http://compute_speaches:8000"
+
+    ollama-svc:
+      loadBalancer:
+        servers:
+          - url: "http://compute_ollama:11434"
+
+    jupyter-svc:
+      loadBalancer:
+        servers:
+          - url: "http://jupyter:8888"
+
+    codeserver-svc:
+      loadBalancer:
+        servers:
+          - url: "http://code-server:8443"
+
+    seafile-svc:
+      loadBalancer:
+        servers:
+          - url: "http://seafile:80"
+
+    immich-svc:
+      loadBalancer:
+        servers:
+          - url: "http://immich_server:2283"
+
+    lldap-svc:
+      loadBalancer:
+        servers:
+          - url: "http://lldap:17170"
+
+    onlyoffice-svc:
+      loadBalancer:
+        servers:
+          - url: "http://compute_onlyoffice:80"
+
+    jellyfin-svc:
+      loadBalancer:
+        servers:
+          - url: "http://jellyfin:8096"
+
+    navidrome-svc:
+      loadBalancer:
+        servers:
+          - url: "http://navidrome:4533"
+
+    qbittorrent-svc:
+      loadBalancer:
+        servers:
+          - url: "http://qbittorrent:8081"
