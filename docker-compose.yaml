@@ -122,6 +122,8 @@ services:
       - LLDAP_LDAP_BASE_DN=${LLDAP_BASE_DN:-dc=example,dc=com}
       - LLDAP_LDAP_USER_DN=${LLDAP_ADMIN_USER:-admin}
       - LLDAP_LDAP_USER_PASS=${LLDAP_ADMIN_PASSWORD:-adminpassword}
+      - LLDAP_FORCE_UPDATE_PRIVATE_KEY=${LLDAP_FORCE_UPDATE_PRIVATE_KEY:-true}
+      - LLDAP_FORCE_LDAP_USER_PASS_RESET=${LLDAP_FORCE_LDAP_USER_PASS_RESET:-true}
       - LLDAP_DATABASE_URL=sqlite:///data/users.db?mode=rwc
       - LLDAP_HTTP_URL=https://lldap.${ROOT_DOMAIN:-example.com}
       - LLDAP_LDAP_PORT=3890
@@ -228,13 +230,16 @@ services:
       - "--global.checknewversion=false"
       - "--global.sendanonymoususage=false"
       - "--api.dashboard=true"
+      - "--entryPoints.traefik.transport.aliasHeadersStrategy=delete"
       - "--entryPoints.web.address=:80"
       - "--entryPoints.web.http.redirections.entryPoint.to=websecure"
       - "--entryPoints.web.http.redirections.entryPoint.scheme=https"
+      - "--entryPoints.web.transport.aliasHeadersStrategy=delete"
       - "--entryPoints.websecure.address=:443"
       - "--entryPoints.websecure.http.tls.certResolver=cloudflare"
       - "--entryPoints.websecure.http.tls.domains[0].main=${ROOT_DOMAIN:-example.com}"
       - "--entryPoints.websecure.http.tls.domains[0].sans=*.${ROOT_DOMAIN:-example.com}"
+      - "--entryPoints.websecure.transport.aliasHeadersStrategy=delete"
       - "--providers.docker=true"
       - "--providers.docker.endpoint=tcp://gateway_socket_proxy:2375"
       - "--providers.docker.exposedbydefault=false"
