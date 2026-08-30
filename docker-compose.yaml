@@ -44,7 +44,7 @@ services:
         mkdir -p /data/traefik/dynamic_generated
         sed "s|example.com|$$ROOT_DOM|g" /authelia_src/configuration.yml | sed "s|dc=example,dc=com|$$DOMAIN_DC|g" | sed "s|__AUTHELIA_LDAP_USER__|$$AUTH_USER|g" | sed "s|__AUTHELIA_LDAP_PASSWORD__|$$AUTH_PASS|g" > /data/authelia/configuration.yml
         sed "s|example.com|$$ROOT_DOM|g" /dynamic_src/middleware.yaml > /data/traefik/dynamic_generated/middleware.yaml
-        sed "s|example.com|$$ROOT_DOM|g" /dynamic_src/routes.yaml > /data/traefik/dynamic_generated/routes.yaml
+        [ -f /dynamic_src/routes.yaml ] && [ -s /dynamic_src/routes.yaml ] && sed "s|example.com|$$ROOT_DOM|g" /dynamic_src/routes.yaml > /data/traefik/dynamic_generated/routes.yaml || true
 
         # Automatic background provisioning of authelia service user in LLDAP if separate from admin
         if [ "$$AUTH_USER" != "$$ADMIN_USER" ]; then
