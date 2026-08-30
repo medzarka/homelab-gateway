@@ -62,7 +62,8 @@ storage:
     path: "/config/data/db.sqlite3"
 
 notifier:
-  smtp: {}
+  smtp:
+    disable_startup_check: true
 
 access_control:
   default_policy: "deny"
