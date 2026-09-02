@@ -18,6 +18,12 @@ services:
       - LLDAP_ADMIN_PASSWORD=${LLDAP_ADMIN_PASSWORD:-adminpassword}
       - AUTHELIA_LDAP_USER=${AUTHELIA_LDAP_USER:-authelia}
       - AUTHELIA_LDAP_PASSWORD=${AUTHELIA_LDAP_PASSWORD:-adminpassword}
+      - AUTHELIA_JWT_SECRET=${AUTHELIA_JWT_SECRET:-}
+      - AUTHELIA_SESSION_SECRET=${AUTHELIA_SESSION_SECRET:-}
+      - AUTHELIA_STORAGE_KEY=${AUTHELIA_STORAGE_KEY:-}
+      - AUTHELIA_OIDC_JWKS_KEY_BASE64=${AUTHELIA_OIDC_JWKS_KEY_BASE64:-}
+      - AUTHELIA_IMMICH_SECRET_HASH=${AUTHELIA_IMMICH_SECRET_HASH:-}
+      - AUTHELIA_SEAFILE_SECRET_HASH=${AUTHELIA_SEAFILE_SECRET_HASH:-}
     volumes:
       - ${DATA_DIR:-/home/${SYSTEM_USER:-homelab}/DATA}/gateway/data:/data
       - ./authelia:/authelia_src
@@ -37,14 +43,65 @@ services:
         ADMIN_PASS="$${LLDAP_ADMIN_PASSWORD:-adminpassword}"
         AUTH_USER="$${AUTHELIA_LDAP_USER:-authelia}"
         AUTH_PASS="$${AUTHELIA_LDAP_PASSWORD:-$$ADMIN_PASS}"
-        echo ">>> [Storage Init] Interpolating ROOT_DOMAIN ($$ROOT_DOM), DOMAIN_DC ($$DOMAIN_DC), AUTH_USER ($$AUTH_USER) into runtime configs..."
+        echo ">>> [Storage Init] Interpolating ROOT_DOMAIN ($$ROOT_DOM), DOMAIN_DC ($$DOMAIN_DC), AUTH_USER ($$AUTH_USER), and secrets into runtime configs..."
 
         # Clean and generate active configs from templates to data volume (prevents stale configs)
         rm -rf /data/traefik/dynamic_generated/*
         mkdir -p /data/traefik/dynamic_generated
-        sed "s|example.com|$$ROOT_DOM|g" /authelia_src/configuration.yml | sed "s|dc=example,dc=com|$$DOMAIN_DC|g" | sed "s|__AUTHELIA_LDAP_USER__|$$AUTH_USER|g" | sed "s|__AUTHELIA_LDAP_PASSWORD__|$$AUTH_PASS|g" > /data/authelia/configuration.yml
         sed "s|example.com|$$ROOT_DOM|g" /dynamic_src/middleware.yaml > /data/traefik/dynamic_generated/middleware.yaml
         [ -f /dynamic_src/routes.yaml ] && [ -s /dynamic_src/routes.yaml ] && sed "s|example.com|$$ROOT_DOM|g" /dynamic_src/routes.yaml > /data/traefik/dynamic_generated/routes.yaml || true
+
+        # Install python3 and openssl for robust secret interpolation & RSA key handling
+        apk add --no-cache python3 openssl curl openldap-clients
+
+        python3 -c "
+        import os, base64, secrets, subprocess
+
+        with open('/authelia_src/configuration.yml') as f:
+            c = f.read()
+
+        root_dom = os.environ.get('ROOT_DOMAIN', 'example.com')
+        domain_dc = os.environ.get('LLDAP_BASE_DN') or '$$(echo \"' + root_dom + '\" | sed \"s/\\./,dc=/g\" | sed \"s/^/dc=/\")'
+        auth_user = os.environ.get('AUTHELIA_LDAP_USER', 'authelia')
+        auth_pass = os.environ.get('AUTHELIA_LDAP_PASSWORD', 'adminpassword')
+
+        jwt_sec = os.environ.get('AUTHELIA_JWT_SECRET') or secrets.token_hex(32)
+        sess_sec = os.environ.get('AUTHELIA_SESSION_SECRET') or secrets.token_hex(32)
+        stor_key = os.environ.get('AUTHELIA_STORAGE_KEY') or secrets.token_hex(32)
+        immich_hash = os.environ.get('AUTHELIA_IMMICH_SECRET_HASH', '')
+        seafile_hash = os.environ.get('AUTHELIA_SEAFILE_SECRET_HASH', '')
+
+        b64_key = os.environ.get('AUTHELIA_OIDC_JWKS_KEY_BASE64', '')
+        key_path = '/data/authelia/oidc_jwks.key'
+        if b64_key:
+            raw_key = base64.b64decode(b64_key.strip()).decode()
+            with open(key_path, 'w') as kf:
+                kf.write(raw_key)
+        elif os.path.exists(key_path):
+            with open(key_path) as kf:
+                raw_key = kf.read()
+        else:
+            raw_key = subprocess.check_output(['openssl', 'genrsa', '2048']).decode()
+            with open(key_path, 'w') as kf:
+                kf.write(raw_key)
+
+        indented_key = '\n'.join('          ' + l for l in raw_key.strip().splitlines())
+
+        c = c.replace('example.com', root_dom)
+        c = c.replace('dc=example,dc=com', domain_dc)
+        c = c.replace('__AUTHELIA_LDAP_USER__', auth_user)
+        c = c.replace('__AUTHELIA_LDAP_PASSWORD__', auth_pass)
+        c = c.replace('__AUTHELIA_JWT_SECRET__', jwt_sec)
+        c = c.replace('__AUTHELIA_SESSION_SECRET__', sess_sec)
+        c = c.replace('__AUTHELIA_STORAGE_KEY__', stor_key)
+        c = c.replace('__AUTHELIA_OIDC_JWKS_KEY__', indented_key)
+        c = c.replace('__AUTHELIA_IMMICH_SECRET_HASH__', immich_hash)
+        c = c.replace('__AUTHELIA_SEAFILE_SECRET_HASH__', seafile_hash)
+
+        with open('/data/authelia/configuration.yml', 'w') as f:
+            f.write(c)
+        print('>>> [Storage Init] Generated runtime /data/authelia/configuration.yml successfully')
+        "
 
         # Synchronous provisioning of authelia service user in LLDAP if separate from admin
         if [ "$$AUTH_USER" != "$$ADMIN_USER" ]; then
