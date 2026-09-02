@@ -24,6 +24,8 @@ services:
       - AUTHELIA_OIDC_JWKS_KEY_BASE64=${AUTHELIA_OIDC_JWKS_KEY_BASE64:-}
       - AUTHELIA_IMMICH_SECRET_HASH=${AUTHELIA_IMMICH_SECRET_HASH:-}
       - AUTHELIA_SEAFILE_SECRET_HASH=${AUTHELIA_SEAFILE_SECRET_HASH:-}
+      - AUTHELIA_IMMICH_SECRET_HASH_BASE64=${AUTHELIA_IMMICH_SECRET_HASH_BASE64:-}
+      - AUTHELIA_SEAFILE_SECRET_HASH_BASE64=${AUTHELIA_SEAFILE_SECRET_HASH_BASE64:-}
     volumes:
       - ${DATA_DIR:-/home/${SYSTEM_USER:-homelab}/DATA}/gateway/data:/data
       - ./authelia:/authelia_src
@@ -68,8 +70,17 @@ services:
         jwt_sec = os.environ.get('AUTHELIA_JWT_SECRET') or secrets.token_hex(32)
         sess_sec = os.environ.get('AUTHELIA_SESSION_SECRET') or secrets.token_hex(32)
         stor_key = os.environ.get('AUTHELIA_STORAGE_KEY') or secrets.token_hex(32)
-        immich_hash = os.environ.get('AUTHELIA_IMMICH_SECRET_HASH', '')
-        seafile_hash = os.environ.get('AUTHELIA_SEAFILE_SECRET_HASH', '')
+        immich_b64 = os.environ.get('AUTHELIA_IMMICH_SECRET_HASH_BASE64', '')
+        if immich_b64:
+            immich_hash = base64.b64decode(immich_b64.strip()).decode()
+        else:
+            immich_hash = os.environ.get('AUTHELIA_IMMICH_SECRET_HASH', '')
+
+        seafile_b64 = os.environ.get('AUTHELIA_SEAFILE_SECRET_HASH_BASE64', '')
+        if seafile_b64:
+            seafile_hash = base64.b64decode(seafile_b64.strip()).decode()
+        else:
+            seafile_hash = os.environ.get('AUTHELIA_SEAFILE_SECRET_HASH', '')
 
         b64_key = os.environ.get('AUTHELIA_OIDC_JWKS_KEY_BASE64', '')
         key_path = '/data/authelia/oidc_jwks.key'
