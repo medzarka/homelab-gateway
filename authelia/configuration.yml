@@ -98,3 +98,81 @@ access_control:
     # --------------------------------------------------------------------------
     - domain_regex: "^(traefik|metrics|beszel|arcane)\\..+$"
       policy: "two_factor"
+
+identity_providers:
+  oidc:
+    jwks:
+      - key_id: "homelab-main"
+        algorithm: "RS256"
+        use: "sig"
+        key: |
+          -----BEGIN PRIVATE KEY-----
+          MIIEvgIBADANBgkqhkiG9w0BAQEFAASCBKgwggSkAgEAAoIBAQCgfkStM6PY4amp
+          ITLo/mhHoMSVKp9zflA1nPxKJDxdglTa6NMysCKsx9vXr/uEX8b/OgVUCMZ2s+mc
+          RZupbAS+s1K0u6EePEDERqUXRg2wiR+ugWKiwmAvspsbXOGB6g5cnC66pdWlv99k
+          ty/SWyb+Rg0q0BpGcGqm7asfaqgAjfPdTGVECg8faEQcmsRs0Ke+dPr3FcRlfHjE
+          o4gyox7mmeqFFADiiR0ACbpLOJxTTc6s5+Mp7YfJg8UlJPuLeZi87lBS8OwJ6UqL
+          zxlylV2bwYCnskpK/YX695RFdd/Ri5/IjxZWQ6Ek1zbQ/aRiCrnA7qSYCyvxnYwP
+          75uIvAzXAgMBAAECggEAJ5hPSC3Tz/eIfG3w2fOd9YHvzd9InF0+26NByObcr7Mu
+          TR2gsUIsI9Vg4vsLQdLBTQla9CsAD5v+V+wCZc988jFah7U8oDF8RxAova+uQ+3o
+          j4xjMcVjppDZXGxTRFJiva1Yh/rO1UgbjIT3Ot37JkNRD01tFhC49zrue188WHpI
+          68u6SmRlfzsDIwC9Gf+fGRQG1NZq+DcH/IVe0Gsd1RXW4j8EFJxXvAZD06OQDJic
+          +Vv/Nh/Em28o7vcnf2qzF0fF11+84nhPUa/e6nM7vcKZMJXWtJyA/Uggez4b0318
+          yYUIeWciE3bJ5sw+cK7m69PcnqDqAsYy0EFvG7NCmQKBgQDRnvU5D1Y9TvgZb2wr
+          A8kOBeUn2C8OT7iG16jmOP76HxPCK7gSH+QP6Y1aIhKn7FIJVZmJJX4M6MeImaWA
+          n4gveFS9Hxaqkk1+Y726cj+8K7avCPS0r8LJ4MQhjBUfZo23o2ZayrxREMV1WHJf
+          Xfmb4WL9fXqrCjhIA/DKRqIj6QKBgQDEALD+TakcMmP0FUuq3t+CVwjvSEUCYB5N
+          Xq4OyuUENxEOKtvB3PX4LJjUkX/ED5LLlnMVavbLla5ypSmLtjGjgMS3/SGu8Wcf
+          oy0kGLUaJIEcIOO0znx9Gu90uqatmTpWhMdr5575102vzrjdmB5DuhZkekKYAnGA
+          5xeRI6nyvwKBgQCHlb+btrXbVfbXzOA0OnCTZ3C/gu983EfIwDl5ICicc/l9wHWB
+          E6uaN0C8qglTIGI3s2xp7xxHEVHuoyMPvSCDQ9vbr/4jOhpxw+X2cOuUtNmnAa32
+          KTFfDskNwePvuY+01jXgR/3imWx+6ESiNtC66N/0gnMTqrqYqiPXUjSR8QKBgQCE
+          Gl8wlxEysvfRTAUa3mpQg+6+r7vrVPM3fGfeCnv+skqpfNNuv0l9Ajnjk0lE0KZE
+          11srhVNfdbwFAzKUOrEMHT75Lv/j1EqH9Uf4ezqcqxvl5Hj0pPMcsunPh/nNKWg7
+          ZfSu0obAp49xvee1WtCTHzn2cLyvjX4IvjiRFzN1KwKBgD2iRpLtjIKIGAjHXa8p
+          H4UPYH8NeuWp0zjSkHzuwQGpYK5wZG1jX1jGNkKCGUm01aosd+bh7e7UhJNS75ey
+          6oqZpuIfrEjfial2X5Hkigeld0k1ZvIfyoXLIAK2Ii9/O07vZuc6a9mr7YEbLpyO
+          0nrla++Rl1ArN0G8cQatzGq2
+          -----END PRIVATE KEY-----
+    clients:
+      - client_id: "immich"
+        client_name: "Immich"
+        client_secret: "$pbkdf2-sha512$310000$D3mC/rJgTuSF2DVy4CkiFA$MZfgOUO9WL6EG6jrGryEm.A1CJUmWY.npNNaB/vUgo524gj6z/ozngzdLBsFpbFiocy99XurtO5ON6t155VXoQ"
+        public: false
+        authorization_policy: "one_factor"
+        require_pkce: true
+        pkce_challenge_method: "S256"
+        redirect_uris:
+          - "https://photos.example.com/auth/login"
+          - "https://photos.example.com/user-settings"
+          - "app.immich:///oauth-callback"
+        scopes:
+          - "openid"
+          - "profile"
+          - "email"
+        response_types:
+          - "code"
+        grant_types:
+          - "authorization_code"
+        token_endpoint_auth_method: "client_secret_post"
+
+      - client_id: "seafile"
+        client_name: "Seafile"
+        client_secret: "$pbkdf2-sha512$310000$AxUAHNcTurXAN4P2lIbQvw$BEmfgP4u9quyJgIL/pE07qkjDKmruzqH3LA4sX2wMBaZxKm7sQbbqq3kBYlWzwuks82tJKmlICnMq1NhSv3Ivg"
+        public: false
+        authorization_policy: "one_factor"
+        require_pkce: false
+        redirect_uris:
+          - "https://mycloud.example.com/oauth/callback/"
+          - "https://seafile.example.com/oauth/callback/"
+        scopes:
+          - "openid"
+          - "profile"
+          - "email"
+        response_types:
+          - "code"
+        grant_types:
+          - "authorization_code"
+        access_token_signed_response_alg: "none"
+        userinfo_signed_response_alg: "none"
+        token_endpoint_auth_method: "client_secret_basic"
