@@ -96,7 +96,7 @@ access_control:
     # --------------------------------------------------------------------------
     # 3. Critical Infrastructure Cockpits (2-Factor: Password + TOTP 2FA)
     # --------------------------------------------------------------------------
-    - domain_regex: "^(traefik|metrics|beszel|arcane|test3)\\..+$"
+    - domain_regex: "^(traefik|metrics|beszel|arcane|qdrant|neo4j|test3)\\..+$"
       policy: "two_factor"
 
     # --------------------------------------------------------------------------

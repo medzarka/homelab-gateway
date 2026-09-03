@@ -33,6 +33,64 @@ http:
       tls:
         certResolver: "cloudflare"
 
+    # --------------------------------------------------------------------------
+    # Qdrant Vector Database Dashboard & Management
+    # Protected by Authelia ForwardAuth SSO (2FA)
+    # --------------------------------------------------------------------------
+    qdrant:
+      rule: "Host(`qdrant.example.com`)"
+      entryPoints: ["websecure"]
+      middlewares:
+        - "authelia-sso"
+        - "app-fail2ban"
+        - "security-headers"
+      service: "qdrant-svc"
+      tls:
+        certResolver: "cloudflare"
+
+    # --------------------------------------------------------------------------
+    # Neo4j Graph Database Web Browser UI
+    # Protected by Authelia ForwardAuth SSO (2FA)
+    # --------------------------------------------------------------------------
+    neo4j:
+      rule: "Host(`neo4j.example.com`)"
+      entryPoints: ["websecure"]
+      middlewares:
+        - "authelia-sso"
+        - "app-fail2ban"
+        - "security-headers"
+      service: "neo4j-svc"
+      tls:
+        certResolver: "cloudflare"
+
+    # --------------------------------------------------------------------------
+    # Mem0 Intelligent Agent Memory API
+    # Protected by API Key (X-API-Key / Bearer)
+    # --------------------------------------------------------------------------
+    mem0:
+      rule: "Host(`mem0.example.com`)"
+      entryPoints: ["websecure"]
+      middlewares:
+        - "app-fail2ban"
+        - "security-headers"
+      service: "mem0-svc"
+      tls:
+        certResolver: "cloudflare"
+
+    # --------------------------------------------------------------------------
+    # Homelab AI Knowledge Hub MCP Server (SSE & REST API)
+    # Protected by API Key (X-API-Key / Bearer)
+    # --------------------------------------------------------------------------
+    knowledge-mcp:
+      rule: "Host(`knowledge-mcp.example.com`)"
+      entryPoints: ["websecure"]
+      middlewares:
+        - "app-fail2ban"
+        - "security-headers"
+      service: "knowledge-mcp-svc"
+      tls:
+        certResolver: "cloudflare"
+
   # ============================================================================
   # Services (Routed over homelab_swarm_net overlay network)
   # ============================================================================
@@ -46,3 +104,23 @@ http:
       loadBalancer:
         servers:
           - url: "http://litellm-helper:5001"
+
+    qdrant-svc:
+      loadBalancer:
+        servers:
+          - url: "http://qdrant:6333"
+
+    neo4j-svc:
+      loadBalancer:
+        servers:
+          - url: "http://neo4j:7474"
+
+    mem0-svc:
+      loadBalancer:
+        servers:
+          - url: "http://mem0-api:8000"
+
+    knowledge-mcp-svc:
+      loadBalancer:
+        servers:
+          - url: "http://knowledge-mcp:8095"
