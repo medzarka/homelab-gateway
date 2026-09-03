@@ -91,8 +91,22 @@ http:
       tls:
         certResolver: "cloudflare"
 
+    # --------------------------------------------------------------------------
+    # Homelab AI Execution Sandbox & MCP Server (Multi-Node Failover)
+    # Protected by API Key (X-API-Key / Bearer)
+    # --------------------------------------------------------------------------
+    agent-sandbox:
+      rule: "Host(`sandbox.example.com`)"
+      entryPoints: ["websecure"]
+      middlewares:
+        - "app-fail2ban"
+        - "security-headers"
+      service: "agent-sandbox-svc"
+      tls:
+        certResolver: "cloudflare"
+
   # ============================================================================
-  # Services (Routed over homelab_swarm_net overlay network)
+  # Services (Routed over homelab_swarm_net overlay network & Tailscale)
   # ============================================================================
   services:
     litellm-svc:
@@ -124,3 +138,15 @@ http:
       loadBalancer:
         servers:
           - url: "http://knowledge-mcp:8095"
+
+    agent-sandbox-svc:
+      loadBalancer:
+        healthCheck:
+          path: "/health"
+          interval: "5s"
+          timeout: "2s"
+        servers:
+          # Primary: Local instance on zap-srv
+          - url: "http://compute_agent_sandbox:8088"
+          # Failover: Remote instance on oci01-flex (Tailscale / Swarm Overlay)
+          - url: "http://100.83.191.68:8088"
