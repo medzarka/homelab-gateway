@@ -1,0 +1,48 @@
+# ==============================================================================
+# Traefik v3 Dynamic Routes Configuration
+# Cross-Node & Swarm Overlay Ingress Routing
+# ==============================================================================
+
+http:
+  routers:
+    # --------------------------------------------------------------------------
+    # LiteLLM Gateway / Proxy (OpenAI API Compatible Endpoint)
+    # --------------------------------------------------------------------------
+    litellm:
+      rule: "Host(`litellm.example.com`)"
+      entryPoints: ["websecure"]
+      middlewares:
+        - "app-fail2ban"
+        - "security-headers"
+      service: "litellm-svc"
+      tls:
+        certResolver: "cloudflare"
+
+    # --------------------------------------------------------------------------
+    # LiteLLM Helper - Model Management & Control Plane
+    # Protected by Authelia ForwardAuth SSO (2FA + Group: litellm-helper)
+    # --------------------------------------------------------------------------
+    litellm-helper:
+      rule: "Host(`litellm-helper.example.com`)"
+      entryPoints: ["websecure"]
+      middlewares:
+        - "authelia-sso"
+        - "app-fail2ban"
+        - "security-headers"
+      service: "litellmhelper-svc"
+      tls:
+        certResolver: "cloudflare"
+
+  # ============================================================================
+  # Services (Routed over homelab_swarm_net overlay network)
+  # ============================================================================
+  services:
+    litellm-svc:
+      loadBalancer:
+        servers:
+          - url: "http://litellm:4000"
+
+    litellmhelper-svc:
+      loadBalancer:
+        servers:
+          - url: "http://litellm-helper:5001"

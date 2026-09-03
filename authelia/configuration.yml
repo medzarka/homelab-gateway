@@ -107,6 +107,15 @@ access_control:
       subject:
         - "group:test"
 
+    # --------------------------------------------------------------------------
+    # 5. AI Control Plane (2-Factor: Strictly LLDAP group 'litellm-helper' & admins)
+    # --------------------------------------------------------------------------
+    - domain_regex: "^litellm-helper\\..+$"
+      policy: "two_factor"
+      subject:
+        - "group:litellm-helper"
+        - "group:homelab_admins"
+
 identity_providers:
   oidc:
     jwks:
