@@ -146,7 +146,7 @@ http:
           interval: "5s"
           timeout: "2s"
         servers:
-          # Primary: Worker Node zap-srv (Storage: /mnt/ramdisk)
-          - url: "http://100.110.173.116:8088"
-          # Failover: Worker Node oci01-flex (Storage: /home/mgrsys/DATA/var/ai-sandbox)
-          - url: "http://100.83.191.68:8088"
+          # Primary: Worker Node zap-srv via Swarm Overlay DNS (No host ports mapped)
+          - url: "http://agent-sandbox-zap-srv:8088"
+          # Failover: Worker Node oci01-flex via Swarm Overlay DNS (No host ports mapped)
+          - url: "http://agent-sandbox-oci01-flex:8088"
