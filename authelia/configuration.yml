@@ -139,6 +139,7 @@ __AUTHELIA_OIDC_JWKS_KEY__
         client_secret: "__AUTHELIA_IMMICH_SECRET_HASH__"
         public: false
         authorization_policy: "immich_policy"
+        consent_mode: "implicit"
         require_pkce: true
         pkce_challenge_method: "S256"
         redirect_uris:
@@ -161,6 +162,7 @@ __AUTHELIA_OIDC_JWKS_KEY__
         client_secret: "__AUTHELIA_SEAFILE_SECRET_HASH__"
         public: false
         authorization_policy: "seafile_policy"
+        consent_mode: "implicit"
         require_pkce: false
         redirect_uris:
           - "https://mycloud.example.com/oauth/callback/"
