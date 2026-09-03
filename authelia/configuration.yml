@@ -77,7 +77,7 @@ access_control:
     # --------------------------------------------------------------------------
     # 1. Public Endpoints & APIs (Bypass SSO)
     # --------------------------------------------------------------------------
-    - domain_regex: "^auth\\..+$"
+    - domain_regex: "^(auth|test1)\\..+$"
       policy: "bypass"
 
     - domain_regex: "^(photos|mycloud|seafile)\\..+$"
@@ -90,13 +90,13 @@ access_control:
     # --------------------------------------------------------------------------
     # 2. Portal & Dashboards (1-Factor: Username + Password)
     # --------------------------------------------------------------------------
-    - domain_regex: "^(homelab|hub|logs|status)\\..+$"
+    - domain_regex: "^(homelab|hub|logs|status|test2)\\..+$"
       policy: "one_factor"
 
     # --------------------------------------------------------------------------
     # 3. Critical Infrastructure Cockpits (2-Factor: Password + TOTP 2FA)
     # --------------------------------------------------------------------------
-    - domain_regex: "^(traefik|metrics|beszel|arcane)\\..+$"
+    - domain_regex: "^(traefik|metrics|beszel|arcane|test3)\\..+$"
       policy: "two_factor"
 
 identity_providers:
