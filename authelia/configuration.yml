@@ -99,6 +99,14 @@ access_control:
     - domain_regex: "^(traefik|metrics|beszel|arcane|test3)\\..+$"
       policy: "two_factor"
 
+    # --------------------------------------------------------------------------
+    # 4. Group-Restricted Services (RBAC: Strictly LLDAP group 'test')
+    # --------------------------------------------------------------------------
+    - domain_regex: "^test4\\..+$"
+      policy: "one_factor"
+      subject:
+        - "group:test"
+
 identity_providers:
   oidc:
     jwks:
