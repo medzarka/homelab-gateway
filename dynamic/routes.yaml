@@ -105,6 +105,94 @@ http:
       tls:
         certResolver: "cloudflare"
 
+    # --------------------------------------------------------------------------
+    # SearXNG Private Search Engine
+    # --------------------------------------------------------------------------
+    searxng:
+      rule: "Host(`search.example.com`) || Host(`searxng.example.com`)"
+      entryPoints: ["websecure"]
+      middlewares:
+        - "app-fail2ban"
+        - "security-headers"
+      service: "searxng-svc"
+      tls:
+        certResolver: "cloudflare"
+
+    # --------------------------------------------------------------------------
+    # Speaches OpenAI-Compatible STT & TTS Engine
+    # --------------------------------------------------------------------------
+    speaches:
+      rule: "Host(`audio.example.com`) || Host(`voice.example.com`) || Host(`speaches.example.com`)"
+      entryPoints: ["websecure"]
+      middlewares:
+        - "app-fail2ban"
+        - "security-headers"
+      service: "speaches-svc"
+      tls:
+        certResolver: "cloudflare"
+
+    # --------------------------------------------------------------------------
+    # Firecrawl Web Scraper & Crawler
+    # --------------------------------------------------------------------------
+    firecrawl:
+      rule: "Host(`scraper.example.com`) || Host(`firecrawl.example.com`)"
+      entryPoints: ["websecure"]
+      middlewares:
+        - "app-fail2ban"
+        - "security-headers"
+      service: "firecrawl-svc"
+      tls:
+        certResolver: "cloudflare"
+
+    # --------------------------------------------------------------------------
+    # Ollama Local LLM & Vision Engine
+    # --------------------------------------------------------------------------
+    ollama:
+      rule: "Host(`ollama.example.com`)"
+      entryPoints: ["websecure"]
+      middlewares:
+        - "app-fail2ban"
+        - "security-headers"
+      service: "ollama-svc"
+      tls:
+        certResolver: "cloudflare"
+
+    # --------------------------------------------------------------------------
+    # OnlyOffice Document Server (Single-User Lean Edition)
+    # --------------------------------------------------------------------------
+    onlyoffice:
+      rule: "Host(`onlyoffice.example.com`) || Host(`onlyoffice-doc-server.example.com`)"
+      entryPoints: ["websecure"]
+      middlewares:
+        - "app-fail2ban"
+        - "onlyoffice-headers"
+      service: "onlyoffice-svc"
+      tls:
+        certResolver: "cloudflare"
+
+    # --------------------------------------------------------------------------
+    # HuggingFace TEI Embeddings & Reranker Inference
+    # --------------------------------------------------------------------------
+    embeddings:
+      rule: "Host(`embeddings.example.com`)"
+      entryPoints: ["websecure"]
+      middlewares:
+        - "app-fail2ban"
+        - "security-headers"
+      service: "embeddings-svc"
+      tls:
+        certResolver: "cloudflare"
+
+    reranker:
+      rule: "Host(`reranker.example.com`)"
+      entryPoints: ["websecure"]
+      middlewares:
+        - "app-fail2ban"
+        - "security-headers"
+      service: "reranker-svc"
+      tls:
+        certResolver: "cloudflare"
+
   # ============================================================================
   # Services (Routed over homelab_swarm_net overlay network & Tailscale)
   # ============================================================================
@@ -150,3 +238,38 @@ http:
           - url: "http://agent-sandbox-zap-srv:8088"
           # Failover: Worker Node oci01-flex via Swarm Overlay DNS (No host ports mapped)
           - url: "http://agent-sandbox-oci01-flex:8088"
+
+    searxng-svc:
+      loadBalancer:
+        servers:
+          - url: "http://searxng:8080"
+
+    speaches-svc:
+      loadBalancer:
+        servers:
+          - url: "http://speaches:8000"
+
+    firecrawl-svc:
+      loadBalancer:
+        servers:
+          - url: "http://firecrawl-api:3036"
+
+    ollama-svc:
+      loadBalancer:
+        servers:
+          - url: "http://ollama:11434"
+
+    onlyoffice-svc:
+      loadBalancer:
+        servers:
+          - url: "http://onlyoffice:80"
+
+    embeddings-svc:
+      loadBalancer:
+        servers:
+          - url: "http://embeddings:80"
+
+    reranker-svc:
+      loadBalancer:
+        servers:
+          - url: "http://reranker:80"
