@@ -90,7 +90,7 @@ access_control:
     # --------------------------------------------------------------------------
     # 2. Portal & Dashboards (1-Factor: Username + Password)
     # --------------------------------------------------------------------------
-    - domain_regex: "^(homelab|hub|logs|status|test2)\\..+$"
+    - domain_regex: "^(homelab|hub|logs|status|hermes|agents|test2)\\..+$"
       policy: "one_factor"
 
     # --------------------------------------------------------------------------
