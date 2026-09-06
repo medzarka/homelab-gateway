@@ -193,6 +193,44 @@ http:
       tls:
         certResolver: "cloudflare"
 
+    # --------------------------------------------------------------------------
+    # Open-WebUI AI Chat & Exploration Hub
+    # --------------------------------------------------------------------------
+    open-webui:
+      rule: "Host(`open-webui.example.com`) || Host(`chat.example.com`)"
+      entryPoints: ["websecure"]
+      middlewares:
+        - "app-fail2ban"
+        - "security-headers"
+        - "compression"
+      service: "open-webui-svc"
+      tls:
+        certResolver: "cloudflare"
+
+    # --------------------------------------------------------------------------
+    # Hermes Agent Dashboard & Gateway
+    # --------------------------------------------------------------------------
+    hermes:
+      rule: "Host(`agents.example.com`) || Host(`hermes.example.com`)"
+      entryPoints: ["websecure"]
+      middlewares:
+        - "authelia-sso"
+        - "app-fail2ban"
+        - "security-headers"
+      service: "hermes-dashboard-svc"
+      tls:
+        certResolver: "cloudflare"
+
+    hermes-api:
+      rule: "Host(`hermes-api.example.com`)"
+      entryPoints: ["websecure"]
+      middlewares:
+        - "app-fail2ban"
+        - "security-headers"
+      service: "hermes-api-svc"
+      tls:
+        certResolver: "cloudflare"
+
   # ============================================================================
   # Services (Routed over homelab_swarm_net overlay network & Tailscale)
   # ============================================================================
@@ -273,3 +311,19 @@ http:
       loadBalancer:
         servers:
           - url: "http://reranker:80"
+
+    open-webui-svc:
+      loadBalancer:
+        servers:
+          - url: "http://open-webui:8080"
+
+    hermes-dashboard-svc:
+      loadBalancer:
+        servers:
+          - url: "http://hermes-agent:9119"
+
+    hermes-api-svc:
+      loadBalancer:
+        servers:
+          - url: "http://hermes-agent:8642"
+
