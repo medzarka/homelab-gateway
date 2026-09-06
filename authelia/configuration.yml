@@ -75,46 +75,38 @@ access_control:
   default_policy: "deny"
   rules:
     # --------------------------------------------------------------------------
-    # 1. Public Endpoints & APIs (Bypass SSO)
+    # 1. Direct Access / Public Endpoints (Bypass SSO)
     # --------------------------------------------------------------------------
-    - domain_regex: "^(auth|test1)\\..+$"
-      policy: "bypass"
-
-    - domain_regex: "^(photos|mycloud|seafile)\\..+$"
-      resources:
-        - "^/api/.*$"
-        - "^/api2/.*$"
-        - "^/seafhttp/.*$"
+    # Includes: immich, seafile, authelia, lldap
+    - domain_regex: "^(auth|authelia|photos|immich|mycloud|seafile|lldap)\\..+$"
       policy: "bypass"
 
     # --------------------------------------------------------------------------
-    # 2. Portal & Dashboards (1-Factor: Username + Password)
+    # 2. AI Agents & Chat (2-Factor: Strictly group 'ai-agents')
     # --------------------------------------------------------------------------
-    - domain_regex: "^(homelab|hub|logs|status|hermes|agents|test2)\\..+$"
-      policy: "one_factor"
-
-    # --------------------------------------------------------------------------
-    # 3. Critical Infrastructure Cockpits (2-Factor: Password + TOTP 2FA)
-    # --------------------------------------------------------------------------
-    - domain_regex: "^(traefik|metrics|beszel|arcane|qdrant|neo4j|test3)\\..+$"
-      policy: "two_factor"
-
-    # --------------------------------------------------------------------------
-    # 4. Group-Restricted Services (RBAC: Strictly LLDAP group 'test')
-    # --------------------------------------------------------------------------
-    - domain_regex: "^test4\\..+$"
-      policy: "one_factor"
-      subject:
-        - "group:test"
-
-    # --------------------------------------------------------------------------
-    # 5. AI Control Plane (2-Factor: Strictly LLDAP group 'litellm-helper' & admins)
-    # --------------------------------------------------------------------------
-    - domain_regex: "^litellm-helper\\..+$"
+    # Includes: hermes agents, open-webui
+    - domain_regex: "^(hermes|hermes-api|agents|open-webui|chat)\\..+$"
       policy: "two_factor"
       subject:
-        - "group:litellm-helper"
-        - "group:homelab_admins"
+        - "group:ai-agents"
+
+    # --------------------------------------------------------------------------
+    # 3. AI Backend Tools (2-Factor: Strictly group 'ai-admins')
+    # --------------------------------------------------------------------------
+    # Includes: litellm, litellm-helper, embedding, ollama, reranker, mem0, qdrant, neo4j, mcp sandbox, mcp knowledge, searxng, speaches, firecrawl
+    - domain_regex: "^(litellm|litellm-helper|embeddings|ollama|reranker|mem0|qdrant|neo4j|sandbox|knowledge-mcp|search|searxng|audio|voice|speaches|scraper|firecrawl)\\..+$"
+      policy: "two_factor"
+      subject:
+        - "group:ai-tools"
+
+    # --------------------------------------------------------------------------
+    # 4. Infrastructure & Monitoring (2-Factor: Strictly group 'ai-admins')
+    # --------------------------------------------------------------------------
+    # Includes: traefik, arcane, beszel, dozzle, onlyoffice doc server, kuma
+    - domain_regex: "^(traefik|arcane|beszel|dozzle|onlyoffice|onlyoffice-doc-server|kuma)\\..+$"
+      policy: "two_factor"
+      subject:
+        - "group:ai-admins"
 
 identity_providers:
   oidc:

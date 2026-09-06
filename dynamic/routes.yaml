@@ -200,6 +200,7 @@ http:
       rule: "Host(`open-webui.example.com`) || Host(`chat.example.com`)"
       entryPoints: ["websecure"]
       middlewares:
+        - "authelia-sso"
         - "app-fail2ban"
         - "security-headers"
         - "compression"
