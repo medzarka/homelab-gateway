@@ -102,11 +102,18 @@ access_control:
     # --------------------------------------------------------------------------
     # 4. Infrastructure & Monitoring (2-Factor: Strictly group 'ai-admins')
     # --------------------------------------------------------------------------
-    # Includes: traefik, arcane, beszel, dozzle, onlyoffice doc server, kuma, homelab, hub
-    - domain_regex: "^(traefik|arcane|beszel|dozzle|onlyoffice|onlyoffice-doc-server|kuma|homelab|hub)\\..+$"
+    # Includes: traefik, arcane, beszel (metrics), dozzle (logs), onlyoffice, kuma
+    - domain_regex: "^(traefik|arcane|beszel|metrics|dozzle|logs|onlyoffice|onlyoffice-doc-server|kuma)\\..+$"
       policy: "two_factor"
       subject:
         - "group:ai-admins"
+
+    # --------------------------------------------------------------------------
+    # 5. General Dashboard (2-Factor: All Authenticated Users)
+    # --------------------------------------------------------------------------
+    # Includes: homelab, hub
+    - domain_regex: "^(homelab|hub)\\..+$"
+      policy: "two_factor"
 
 identity_providers:
   oidc:
