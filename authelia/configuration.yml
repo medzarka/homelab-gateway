@@ -102,8 +102,8 @@ access_control:
     # --------------------------------------------------------------------------
     # 4. Infrastructure & Monitoring (2-Factor: Strictly group 'ai-admins')
     # --------------------------------------------------------------------------
-    # Includes: traefik, arcane, beszel, dozzle, onlyoffice doc server, kuma
-    - domain_regex: "^(traefik|arcane|beszel|dozzle|onlyoffice|onlyoffice-doc-server|kuma)\\..+$"
+    # Includes: traefik, arcane, beszel, dozzle, onlyoffice doc server, kuma, homelab, hub
+    - domain_regex: "^(traefik|arcane|beszel|dozzle|onlyoffice|onlyoffice-doc-server|kuma|homelab|hub)\\..+$"
       policy: "two_factor"
       subject:
         - "group:ai-admins"
