@@ -63,7 +63,9 @@ services:
             c = f.read()
 
         root_dom = os.environ.get('ROOT_DOMAIN', 'example.com')
-        domain_dc = os.environ.get('LLDAP_BASE_DN') or '$$(echo \"' + root_dom + '\" | sed \"s/\\./,dc=/g\" | sed \"s/^/dc=/\")'
+        domain_dc = os.environ.get('LLDAP_BASE_DN')
+        if not domain_dc:
+            domain_dc = 'dc=' + root_dom.replace('.', ',dc=')
         auth_user = os.environ.get('AUTHELIA_LDAP_USER', 'authelia')
         auth_pass = os.environ.get('AUTHELIA_LDAP_PASSWORD', 'adminpassword')
 
@@ -374,10 +376,6 @@ services:
     depends_on:
       socket-proxy:
         condition: service_started
-      authelia:
-        condition: service_healthy
-      lldap:
-        condition: service_healthy
       storage-init:
         condition: service_healthy
     logging:
