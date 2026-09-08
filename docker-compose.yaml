@@ -33,6 +33,8 @@ services:
     entrypoint: [ "/bin/sh", "-c" ]
     command:
       - |
+        echo ">>> [Storage Init] Delaying boot by 15s to allow Docker Swarm overlay networks to initialize..."
+        sleep 15
         echo ">>> [Storage Init] Setting up directories and permissions..."
         mkdir -p /data/traefik/logs /data/authelia /data/lldap /data/traefik/dynamic_generated
         touch /data/traefik/acme.json /data/traefik/logs/access.log
@@ -170,7 +172,7 @@ services:
       interval: 5s
       timeout: 5s
       retries: 10
-      start_period: 5s
+      start_period: 15s
 
   # ========================================================
   # DOCKER SOCKET PROXY (Read-Only Secure Socket Isolation)
