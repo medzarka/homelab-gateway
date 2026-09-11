@@ -91,6 +91,16 @@ access_control:
         - "group:ai-agents"
 
     # --------------------------------------------------------------------------
+    # 2.1 AI Workspace File Manager (2-Factor: Strictly group 'ai-admins')
+    # --------------------------------------------------------------------------
+    # Includes: files-agents, workspace, files
+    - domain_regex: "^(files-agents|workspace|files)\\..+$"
+      policy: "two_factor"
+      subject:
+        - "group:ai-admins"
+        - "group:ai_admins"
+
+    # --------------------------------------------------------------------------
     # 3. AI Backend Tools (2-Factor: Strictly group 'ai-admins')
     # --------------------------------------------------------------------------
     # Includes: litellm, litellm-helper, embedding, ollama, reranker, mem0, qdrant, neo4j, mcp sandbox, mcp knowledge, searxng, speaches, firecrawl
