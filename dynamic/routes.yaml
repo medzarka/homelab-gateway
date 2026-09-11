@@ -232,6 +232,21 @@ http:
       tls:
         certResolver: "cloudflare"
 
+    # --------------------------------------------------------------------------
+    # Hermes Agent Workspace & Output File Manager
+    # --------------------------------------------------------------------------
+    filebrowser:
+      rule: "Host(`files-agents.example.com`) || Host(`workspace.example.com`)"
+      entryPoints: ["websecure"]
+      middlewares:
+        - "authelia-sso"
+        - "app-fail2ban"
+        - "security-headers"
+        - "compression"
+      service: "filebrowser-svc"
+      tls:
+        certResolver: "cloudflare"
+
   # ============================================================================
   # Services (Routed over homelab_swarm_net overlay network & Tailscale)
   # ============================================================================
@@ -327,4 +342,9 @@ http:
       loadBalancer:
         servers:
           - url: "http://hermes-agent:8642"
+
+    filebrowser-svc:
+      loadBalancer:
+        servers:
+          - url: "http://hermes_filebrowser:8080"
 
