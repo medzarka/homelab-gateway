@@ -82,13 +82,18 @@ access_control:
       policy: "bypass"
 
     # --------------------------------------------------------------------------
-    # 2. AI Agents & Chat (2-Factor: Strictly group 'ai-agents')
+    # 2. AI Agents & Chat (2-Factor: Group 'ai-agents' and Admins)
     # --------------------------------------------------------------------------
     # Includes: hermes agents, open-webui, ignis obsidian web
     - domain_regex: "^(hermes|hermes-api|agents|open-webui|chat|ignis|obsidian)\\..+$"
       policy: "two_factor"
       subject:
         - "group:ai-agents"
+        - "group:ai_agents"
+        - "group:ai-admins"
+        - "group:ai_admins"
+        - "group:homelab_admins"
+        - "group:admins"
 
     # --------------------------------------------------------------------------
     # 2.1 AI Workspace File Manager (2-Factor: Strictly group 'ai-admins')
