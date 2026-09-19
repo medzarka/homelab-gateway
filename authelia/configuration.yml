@@ -109,7 +109,10 @@ access_control:
       policy: "two_factor"
       subject:
         - "group:ai-tools"
-
+        - "group:ai_tools"
+        - "group:ai-admins"
+        - "group:ai_admins"
+        
     # --------------------------------------------------------------------------
     # 4. Infrastructure & Monitoring (2-Factor: Admins only)
     # --------------------------------------------------------------------------
