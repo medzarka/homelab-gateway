@@ -84,8 +84,8 @@ access_control:
     # --------------------------------------------------------------------------
     # 2. AI Agents & Chat (2-Factor: Strictly group 'ai-agents')
     # --------------------------------------------------------------------------
-    # Includes: hermes agents, open-webui
-    - domain_regex: "^(hermes|hermes-api|agents|open-webui|chat)\\..+$"
+    # Includes: hermes agents, open-webui, ignis obsidian web
+    - domain_regex: "^(hermes|hermes-api|agents|open-webui|chat|ignis|obsidian)\\..+$"
       policy: "two_factor"
       subject:
         - "group:ai-agents"

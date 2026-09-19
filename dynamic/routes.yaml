@@ -92,6 +92,21 @@ http:
         certResolver: "cloudflare"
 
     # --------------------------------------------------------------------------
+    # Ignis - Web-based Obsidian Interface
+    # Protected by Authelia ForwardAuth SSO (2FA + Group: ai-agents)
+    # --------------------------------------------------------------------------
+    ignis:
+      rule: "Host(`ignis.example.com`) || Host(`obsidian.example.com`)"
+      entryPoints: ["websecure"]
+      middlewares:
+        - "authelia-sso"
+        - "app-fail2ban"
+        - "security-headers"
+      service: "ignis-svc"
+      tls:
+        certResolver: "cloudflare"
+
+    # --------------------------------------------------------------------------
     # Homelab AI Execution Sandbox & MCP Server (Multi-Node Failover)
     # Protected by API Key (X-API-Key / Bearer)
     # --------------------------------------------------------------------------
@@ -280,6 +295,11 @@ http:
       loadBalancer:
         servers:
           - url: "http://knowledge-mcp:8095"
+
+    ignis-svc:
+      loadBalancer:
+        servers:
+          - url: "http://ignis:8080"
 
     agent-sandbox-svc:
       loadBalancer:
