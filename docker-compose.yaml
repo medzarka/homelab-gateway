@@ -40,6 +40,7 @@ services:
         touch /data/traefik/acme.json /data/traefik/logs/access.log
         chmod -R 775 /data
         chmod 600 /data/traefik/acme.json
+        chown -R ${PUID:-1000}:${PGID:-1000} /data/lldap /data/authelia /data/traefik
 
         ROOT_DOM="$${ROOT_DOMAIN:-example.com}"
         DOMAIN_DC="$${LLDAP_BASE_DN:-$$(echo "$$ROOT_DOM" | sed 's/\./,dc=/g' | sed 's/^/dc=/')}"
@@ -220,6 +221,8 @@ services:
     restart: unless-stopped
     volumes:
       - ${DATA_DIR:-/home/${SYSTEM_USER:-homelab}/DATA}/gateway/data/lldap:/data
+      - /etc/localtime:/etc/localtime:ro
+      - /etc/timezone:/etc/timezone:ro
     environment:
       - TZ=${TZ:-UTC}
       - LLDAP_JWT_SECRET=${LLDAP_JWT_SECRET:-7e6e77fd47866c85542587ea39835c21547309cbaf36c1aeb1dedebf32419040}
@@ -269,6 +272,8 @@ services:
       - ./authelia/users_database.yml:/config/users_database.yml
       - ./authelia/assets:/config/assets
       - ${DATA_DIR:-/home/${SYSTEM_USER:-homelab}/DATA}/gateway/data/authelia:/config/data
+      - /etc/localtime:/etc/localtime:ro
+      - /etc/timezone:/etc/timezone:ro
     environment:
       - TZ=${TZ:-UTC}
       - AUTHELIA_NOTIFIER_DISABLE_STARTUP_CHECK=true
@@ -329,6 +334,8 @@ services:
       - ${DATA_DIR:-/home/${SYSTEM_USER:-homelab}/DATA}/gateway/data/traefik/acme.json:/etc/traefik/acme.json
       - ${DATA_DIR:-/home/${SYSTEM_USER:-homelab}/DATA}/gateway/data/traefik/logs:/var/log/traefik
       - ${DATA_DIR:-/home/${SYSTEM_USER:-homelab}/DATA}/gateway/data/traefik/dynamic_generated:/etc/traefik/dynamic:ro
+      - /etc/localtime:/etc/localtime:ro
+      - /etc/timezone:/etc/timezone:ro
     extra_hosts:
       - "host.docker.internal:host-gateway"
     command:
@@ -345,6 +352,8 @@ services:
       - "--entryPoints.websecure.http.tls.domains[0].main=${ROOT_DOMAIN:-example.com}"
       - "--entryPoints.websecure.http.tls.domains[0].sans=*.${ROOT_DOMAIN:-example.com}"
       - "--entryPoints.websecure.http.aliasHeadersStrategy=delete"
+      - "--entryPoints.websecure.transport.respondingTimeouts.readTimeout=1800s"
+      - "--entryPoints.websecure.transport.respondingTimeouts.idleTimeout=1800s"
       - "--providers.docker=true"
       - "--providers.docker.endpoint=tcp://gateway_socket_proxy:2375"
       - "--providers.docker.exposedbydefault=false"
