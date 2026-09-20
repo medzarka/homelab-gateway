@@ -222,7 +222,6 @@ services:
     volumes:
       - ${DATA_DIR:-/home/${SYSTEM_USER:-homelab}/DATA}/gateway/data/lldap:/data
       - /etc/localtime:/etc/localtime:ro
-      - /etc/timezone:/etc/timezone:ro
     environment:
       - TZ=${TZ:-UTC}
       - LLDAP_JWT_SECRET=${LLDAP_JWT_SECRET:-7e6e77fd47866c85542587ea39835c21547309cbaf36c1aeb1dedebf32419040}
@@ -273,7 +272,6 @@ services:
       - ./authelia/assets:/config/assets
       - ${DATA_DIR:-/home/${SYSTEM_USER:-homelab}/DATA}/gateway/data/authelia:/config/data
       - /etc/localtime:/etc/localtime:ro
-      - /etc/timezone:/etc/timezone:ro
     environment:
       - TZ=${TZ:-UTC}
       - AUTHELIA_NOTIFIER_DISABLE_STARTUP_CHECK=true
@@ -335,7 +333,6 @@ services:
       - ${DATA_DIR:-/home/${SYSTEM_USER:-homelab}/DATA}/gateway/data/traefik/logs:/var/log/traefik
       - ${DATA_DIR:-/home/${SYSTEM_USER:-homelab}/DATA}/gateway/data/traefik/dynamic_generated:/etc/traefik/dynamic:ro
       - /etc/localtime:/etc/localtime:ro
-      - /etc/timezone:/etc/timezone:ro
     extra_hosts:
       - "host.docker.internal:host-gateway"
     command:
