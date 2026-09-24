@@ -26,6 +26,7 @@ services:
       - AUTHELIA_SEAFILE_SECRET_HASH=${AUTHELIA_SEAFILE_SECRET_HASH:-}
       - AUTHELIA_IMMICH_SECRET_HASH_BASE64=${AUTHELIA_IMMICH_SECRET_HASH_BASE64:-}
       - AUTHELIA_SEAFILE_SECRET_HASH_BASE64=${AUTHELIA_SEAFILE_SECRET_HASH_BASE64:-}
+      - AUTHELIA_TERMIX_SECRET_HASH=${AUTHELIA_TERMIX_SECRET_HASH:-}
     volumes:
       - ${DATA_DIR:-/home/${SYSTEM_USER:-homelab}/DATA}/gateway/data:/data
       - ./authelia:/authelia_src
@@ -87,6 +88,8 @@ services:
         else:
             seafile_hash = os.environ.get('AUTHELIA_SEAFILE_SECRET_HASH', '')
 
+        termix_hash = os.environ.get('AUTHELIA_TERMIX_SECRET_HASH', '')
+
         b64_key = os.environ.get('AUTHELIA_OIDC_JWKS_KEY_BASE64', '')
         key_path = '/data/authelia/oidc_jwks.key'
         if b64_key:
@@ -113,6 +116,7 @@ services:
         c = c.replace('__AUTHELIA_OIDC_JWKS_KEY__', indented_key)
         c = c.replace('__AUTHELIA_IMMICH_SECRET_HASH__', immich_hash)
         c = c.replace('__AUTHELIA_SEAFILE_SECRET_HASH__', seafile_hash)
+        c = c.replace('__AUTHELIA_TERMIX_SECRET_HASH__', termix_hash)
 
         with open('/data/authelia/configuration.yml', 'w') as f:
             f.write(c)

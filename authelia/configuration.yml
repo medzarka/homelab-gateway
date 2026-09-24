@@ -213,3 +213,27 @@ __AUTHELIA_OIDC_JWKS_KEY__
         access_token_signed_response_alg: "none"
         userinfo_signed_response_alg: "none"
         token_endpoint_auth_method: "client_secret_basic"
+
+      - client_id: "termix"
+        client_name: "Termix"
+        client_secret: "__AUTHELIA_TERMIX_SECRET_HASH__"
+        public: false
+        authorization_policy: "two_factor"
+        consent_mode: "implicit"
+        require_pkce: true
+        pkce_challenge_method: "S256"
+        redirect_uris:
+          - "https://termix.example.com/api/auth/callback/oidc"
+          - "https://termix.example.com/oauth/callback"
+          - "https://termix.example.com/auth/oidc/callback"
+          - "https://termix.example.com/callback"
+        scopes:
+          - "openid"
+          - "profile"
+          - "email"
+          - "groups"
+        response_types:
+          - "code"
+        grant_types:
+          - "authorization_code"
+        token_endpoint_auth_method: "client_secret_post"
